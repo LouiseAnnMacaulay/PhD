@@ -1,0 +1,1679 @@
+
+
+********************************************************************************
+						* CHAPTER 7 xtlogit LOOP (LIKELIHOOD) *
+********************************************************************************
+
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome HomeFlexi JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+********************************************************************************
+* UC
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated UnpaidCarer
+
+    capture estimates store `var'_UC1
+}
+
+
+********************************************************************************
+* NC1
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        Care1 Care2 Care3or4 
+
+    capture estimates store `var'_NC1
+}
+
+********************************************************************************
+* HC1
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        Under10 Under19 Over20 Over50 ///
+      
+    capture estimates store `var'_HC1
+}
+
+********************************************************************************
+* DC1
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated DisabledCarer NoDCarer 
+
+    capture estimates store `var'_DC1
+}
+
+********************************************************************************
+* LC1
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        HouseholdCarer MixedCareLocations NonResidentCarer 
+
+    capture estimates store `var'_LC1
+}
+
+
+
+********************************************************************************
+* NC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        Care2 Care3or4 ///
+        if Care1==1 | Care2==1 | Care3or4==1
+
+    capture estimates store `var'_NC2
+}
+
+********************************************************************************
+* HC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        Under19 Over20 Over50 ///
+        if Under10==1 | Under19==1 | Over20==1 | Over50==1
+
+    capture estimates store `var'_HC2
+}
+
+********************************************************************************
+* DC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated DisabledCarer ///
+        if DisabledCarer==1 | NoDCarer==1
+
+    capture estimates store `var'_DC2
+}
+
+********************************************************************************
+* LC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        MixedCareLocations NonResidentCarer ///
+        if HouseholdCarer==1 | NonResidentCarer==1
+
+    capture estimates store `var'_LC2
+}
+
+
+********************************************************************************
+
+********************************************************************************
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+********************************************************************************
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define UnpaidCare
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated UnpaidCarer
+    }
+    est store `var'_UC1
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+    UnpaidCare `var' Dependent
+}
+
+
+********************************************************************************
+
+* Function to create graphs for each dependent variable and care location. 
+program define LocationCare
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated HouseholdCarer NonResidentCarer MixedCareLocations
+    }
+    est store `var'_LC1
+end
+
+* Loop over each dependent for care location.
+foreach var of local Dependent_Variables {
+    LocationCare `var' Dependent
+}
+
+program define LocationCare2
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated MixedCareLocations NonResidentCarer if HouseholdCarer==1 | NonResidentCarer==1 
+    }
+    est store `var'_LC2
+end
+
+* Loop over each dependent for care location.
+foreach var of local Dependent_Variables {
+    LocationCare2 `var' Dependent
+}
+
+*******************************************************************************
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define NumberCare
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated Care1 Care2 Care3or4 
+    }
+    est store `var'_NC1
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+    NumberCare `var' Dependent
+}
+
+
+program define NumberCare2
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated Care2 Care3or4 if Care1==1 | Care2==1 | Care3or4==1
+    }
+    est store `var'_NC2
+end
+
+* Loop over each dependent for care location.
+foreach var of local Dependent_Variables {
+    NumberCare2 `var' Dependent
+}
+
+*******************************************************************************
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define HoursC
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated Under10 Under19 Over20 Over50 
+    }
+    est store `var'_HC1
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+   HoursC `var' Dependent
+}
+
+
+program define HoursC2
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated Under19 Over20 Over50 if Under10==1 | Under19==1 | Over20==1 | Over50==1
+    }
+    est store `var'_HC2
+end
+
+* Loop over each dependent for care location.
+foreach var of local Dependent_Variables {
+    HoursC2 `var' Dependent
+}
+
+*******************************************************************************
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define DisabledCarer
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated DisabledCarer NoDCarer
+    }
+    est store `var'_DC1
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+    DisabledCarer `var' Dependent
+}
+
+program define DisabledCarer2
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated DisabledCarer if DisabledCarer==1 | NoDCarer==1
+    }
+    est store `var'_DC2
+end
+
+* Loop over each dependent for care location.
+foreach var of local Dependent_Variables {
+    DisabledCarer2 `var' Dependent
+}
+
+
+******************************************************************************
+
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+********************************************************************************
+* NC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        Care2 Care3or4 ///
+        if Care1==1 | Care2==1 | Care3or4==1
+
+    capture estimates store `var'_NC2
+}
+
+********************************************************************************
+* HC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        Under19 Over20 Over50 ///
+        if Under10==1 | Under19==1 | Over20==1 | Over50==1
+
+    capture estimates store `var'_HC2
+}
+
+********************************************************************************
+* DC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated DisabledCarer ///
+        if DisabledCarer==1 | NoDCarer==1
+
+    capture estimates store `var'_DC2
+}
+
+********************************************************************************
+* LC2
+********************************************************************************
+foreach var of local Dependent_Variables {
+
+    xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean ///
+        Asian Indian Arab Mixed Other Single Seperated ///
+        MixedCareLocations NonResidentCarer ///
+        if HouseholdCarer==1 | NonResidentCarer==1
+
+    capture estimates store `var'_LC2
+}
+
+
+*******************************************************************************
+								*PEET *
+*******************************************************************************
+
+est table PEET_UC1 PEET_LC1 PEET_NC1 PEET_HC1 PEET_DC1, b(%8.4g) star stats(N ll bic r2)
+est table PEET_LC2 PEET_NC2 PEET_HC2 PEET_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (PEET_UC1, label("Unpaid Carer")) (PEET_LC1, label("Location Care")) (PEET_NC1, label("Number Caring For")) (PEET_HC1, label("Hours Caring")) (PEET_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(PEET1, replace)	
+
+coefplot (PEET_LC2, label("Location Care")) (PEET_NC2, label("Number Caring For")) (PEET_HC2, label("Hours Caring")) (PEET_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(PEET2, replace)
+
+graph combine PEET1 PEET2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of PEET as an Unpaid Carer", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+
+*******************************************************************************
+								*PartTime*
+*******************************************************************************
+
+est table PartTime_UC1 PartTime_LC1 PartTime_NC1 PartTime_HC1 PartTime_DC1, b(%8.4g) star stats(N ll bic r2)
+est table PartTime_LC2 PartTime_NC2 PartTime_HC2 PartTime_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (PartTime_UC1, label("Unpaid Carer")) (PartTime_LC1, label("Location Care")) (PartTime_NC1, label("Number Caring For")) (PartTime_HC1, label("Hours Caring")) (PartTime_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(PartTime1, replace)	
+
+coefplot (PartTime_LC2, label("Location Care")) (PartTime_NC2, label("Number Caring For")) (PartTime_HC2, label("Hours Caring")) (PartTime_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(PartTime2, replace)
+
+graph combine PartTime1 PartTime2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Working Part-Time as an Unpaid Carer ", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 
+	 
+*******************************************************************************
+								*TempJob*
+*******************************************************************************
+
+est table TempJob_UC1 TempJob_LC1 TempJob_NC1 TempJob_HC1 TempJob_DC1, b(%8.4g) star stats(N ll bic r2)
+est table TempJob_LC2 TempJob_NC2 TempJob_HC2 TempJob_DC2, b(%8.4g) star stats(N ll bic r2)
+
+
+coefplot (TempJob_UC1, label("Unpaid Carer")) (TempJob_LC1, label("Location Care")) (TempJob_NC1, label("Number Caring For")) (TempJob_HC1, label("Hours Caring")) (TempJob_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(TempJob1, replace)	
+
+coefplot (TempJob_LC2, label("Location Care")) (TempJob_NC2, label("Number Caring For")) (TempJob_HC2, label("Hours Caring")) (TempJob_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(TempJob2, replace)
+
+graph combine TempJob1 TempJob2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of being Temporarily Employed as an Unpaid Carer", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 
+*******************************************************************************
+								*ZeroHours*
+*******************************************************************************
+
+coefplot (ZeroHours_UC1, label("Unpaid Carer")) (ZeroHours_LC1, label("Location Care")) (ZeroHours_NC1, label("Number Caring For")) (ZeroHours_HC1, label("Hours Caring")) (ZeroHours_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Zero Hour Contract by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of Employment being a Zero Hour Contract", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall)) 
+
+*******************************************************************************
+								*FlexiTime*
+*******************************************************************************
+
+est table FlexiTime_UC1 FlexiTime_LC1 FlexiTime_NC1 FlexiTime_HC1 FlexiTime_DC1, b(%8.4g) star stats(N ll bic r2)
+est table FlexiTime_LC2 FlexiTime_NC2 FlexiTime_HC2 FlexiTime_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (FlexiTime_UC1, label("Unpaid Carer")) (FlexiTime_LC1, label("Location Care")) (FlexiTime_NC1, label("Number Caring For")) (FlexiTime_HC1, label("Hours Caring")) (FlexiTime_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(FlexiTime1, replace)	
+
+coefplot (FlexiTime_LC2, label("Location Care")) (FlexiTime_NC2, label("Number Caring For")) (FlexiTime_HC2, label("Hours Caring")) (FlexiTime_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(FlexiTime2, replace)
+
+graph combine FlexiTime1 FlexiTime2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Flexibile Working Hours as an Unpaid Carer ", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 
+*******************************************************************************
+								*WorkHome*
+*******************************************************************************
+
+est table WorkHome_UC1 WorkHome_LC1 WorkHome_NC1 WorkHome_HC1 WorkHome_DC1, b(%8.4g) star stats(N ll bic r2)
+est table WorkHome_LC2 WorkHome_NC2 WorkHome_HC2 WorkHome_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (WorkHome_UC1, label("Unpaid Carer")) (WorkHome_LC1, label("Location Care")) (WorkHome_NC1, label("Number Caring For")) (WorkHome_HC1, label("Hours Caring")) (WorkHome_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(WorkHome1, replace)	
+
+coefplot (WorkHome_LC2, label("Location Care")) (WorkHome_NC2, label("Number Caring For")) (WorkHome_HC2, label("Hours Caring")) (WorkHome_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(WorkHome2, replace)
+
+graph combine WorkHome1 WorkHome2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Home Working as an Unpaid Carer ", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+*******************************************************************************
+		*Home Working and Flexible Hours*
+*******************************************************************************	
+	 
+
+est table HomeFlexi_UC1 HomeFlexi_LC1 HomeFlexi_NC1 HomeFlexi_HC1 HomeFlexi_DC1, b(%8.4g) star stats(N ll bic r2)
+est table HomeFlexi_LC2 HomeFlexi_NC2 HomeFlexi_HC2 HomeFlexi_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (HomeFlexi_UC1, label("Unpaid Carer")) (HomeFlexi_LC1, label("Location Care")) (HomeFlexi_NC1, label("Number Caring For")) (HomeFlexi_HC1, label("Hours Caring")) (HomeFlexi_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(HomeFlexi1, replace)	
+
+coefplot (HomeFlexi_LC2, label("Location Care")) (HomeFlexi_NC2, label("Number Caring For")) (HomeFlexi_HC2, label("Hours Caring")) (HomeFlexi_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(HomeFlexi2, replace)
+
+graph combine HomeFlexi1 HomeFlexi2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Flexibile Working as an Unpaid Carer ", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 	 
+
+*******************************************************************************
+								*JobStress*
+*******************************************************************************
+coefplot (JobStress_UC1, label("Unpaid Carer")) (JobStress_LC1, label("Location Care")) (JobStress_NC1, label("Number Caring For")) (JobStress_HC1, label("Hours Caring")) (JobStress_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(JobStress1, replace)	
+
+coefplot (JobStress_LC2, label("Location Care")) (JobStress_NC2, label("Number Caring For")) (JobStress_HC2, label("Hours Caring")) (JobStress_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(JobStress2, replace)
+
+graph combine JobStress1 JobStress2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Feeling Stressed by Job as an Unpaid Carer", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 
+	 
+*******************************************************************************
+							*MayLoseJob*
+*******************************************************************************
+
+est table MayLoseJob_UC1 MayLoseJob_LC1 MayLoseJob_NC1 MayLoseJob_HC1 MayLoseJob_DC1, b(%8.4g) star stats(N ll bic r2)
+est table MayLoseJob_LC2 MayLoseJob_NC2 MayLoseJob_HC2 MayLoseJob_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (MayLoseJob_UC1, label("Unpaid Carer")) (MayLoseJob_LC1, label("Location Care")) (MayLoseJob_NC1, label("Number Caring For")) (MayLoseJob_HC1, label("Hours Caring")) (MayLoseJob_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(MayLoseJob1, replace)	
+
+coefplot (MayLoseJob_LC2, label("Location Care")) (MayLoseJob_NC2, label("Number Caring For")) (MayLoseJob_HC2, label("Hours Caring")) (MayLoseJob_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(MayLoseJob2, replace)
+
+graph combine MayLoseJob1 MayLoseJob2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Fear of Losing Employment as an Unpaid Carer", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 
+		 
+	 
+*******************************************************************************
+							*MayQuitJob*
+*******************************************************************************
+
+coefplot (MayQuitJob_UC1, label("Unpaid Carer")) (MayQuitJob_LC1, label("Location Care")) (MayQuitJob_NC1, label("Number Caring For")) (MayQuitJob_HC1, label("Hours Caring")) (MayQuitJob_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Considers Leaving Employment by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of leaving employment", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+	 
+	  
+
+*******************************************************************************
+							*PublicCompany*
+*******************************************************************************
+
+
+coefplot (PublicCompany_UC1, label("Unpaid Carer")) (PublicCompany_LC1, label("Location Care")) (PublicCompany_NC1, label("Number Caring For")) (PublicCompany_HC1, label("Hours Caring")) (PublicCompany_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(PublicCompany1, replace)	
+
+coefplot (PublicCompany_LC2, label("Location Care")) (PublicCompany_NC2, label("Number Caring For")) (PublicCompany_HC2, label("Hours Caring")) (PublicCompany_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(PublicCompany2, replace)
+
+graph combine PublicCompany1 PublicCompany2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Working in the Public Sector as an Unpaid Carer", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	  
+	 
+*******************************************************************************
+						*ManagerResponsibility*
+*******************************************************************************
+
+
+est table ManagerResponsibility_UC1 ManagerResponsibility_LC1 ManagerResponsibility_NC1 ManagerResponsibility_HC1 ManagerResponsibility_DC1, b(%8.4g) star stats(N ll bic r2)
+est table ManagerResponsibility_LC2 ManagerResponsibility_NC2 ManagerResponsibility_HC2 ManagerResponsibility_DC2, b(%8.4g) star stats(N ll bic r2)
+
+coefplot (ManagerResponsibility_UC1, label("Unpaid Carer")) (ManagerResponsibility_LC1, label("Location Care")) (ManagerResponsibility_NC1, label("Number Caring For")) (ManagerResponsibility_HC1, label("Hours Caring")) (ManagerResponsibility_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(ManagerResponsibility1, replace)	
+
+coefplot (ManagerResponsibility_LC2, label("Location Care")) (ManagerResponsibility_NC2, label("Number Caring For")) (ManagerResponsibility_HC2, label("Hours Caring")) (ManagerResponsibility_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+eform ///
+xline(1, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "1 Non-Resident" ///
+    Care2 = "2 Non-Residents" ///
+    Care3or4 = "3+ Non-Residents" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+	title("Compared to Non-Carers", span size(*.9) linegap(1.5) margin(medium)) /// 
+name(ManagerResponsibility2, replace)
+
+graph combine ManagerResponsibility1 ManagerResponsibility2, ///
+	ycommon xcommon col(2) imargin(5) ///
+    title("UKHLS: Likelihood of Management/Supervisor Responsibility as an Unpaid Carer ", span size(*0.7) linegap(2)) ///
+    note("This graph plots odds ratios from 8 xtlogit models", span size(*.7) margin(vsmall)) ///
+	caption("Control Variables: Fem, Age, Age2, HighEducation, White, AfricanCaribbean, Asian, Indian, Arab, Mixed, Other, Single, Seperated", span size(*.4) margin(vsmall))
+	
+	 
+*******************************************************************************
+							*RedundantSacked*
+*******************************************************************************
+	
+ 
+coefplot (RedundantSacked_UC1, label("Unpaid Carer")) (RedundantSacked_LC1, label("Location Care")) (RedundantSacked_NC1, label("Number Caring For")) (RedundantSacked_HC1, label("Hours Caring")) (RedundantSacked_DC1, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Redundant/Sacked by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of being made Redundant/Sacked", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+	
+********************************************************************************
+			*COMPARE AGAINST OTHER UNPAID CARER BASE CATEGORIES*
+********************************************************************************
+
+********************************************************************************
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+********************************************************************************
+tab1 HouseholdCarer NonResidentCarer
+
+* Function to create graphs for each dependent variable and care location. 
+program define LocationCare
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated HouseholdCarer if HouseholdCarer==1 | NonResidentCarer==1
+    }
+    est store `var'_LC2
+end
+
+* Loop over each dependent for care location.
+foreach var of local Dependent_Variables {
+    LocationCare `var' Dependent
+}
+
+*******************************************************************************
+tab1 Care1 Care2 Care3or4
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define NumberCare
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated Care2 Care3or4 if Care1==1 | Care2==1 | Care3or4==1
+    }
+    est store `var'_NC2
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+    NumberCare `var' Dependent
+}
+
+*******************************************************************************
+tab1 Under10 Under19 Over20 Over50 
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define HoursC
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated Under19 Over20 Over50 if Under10==1 | Under19==1 | Over20==1 | Over50==1
+    }
+    est store `var'_HC2
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+   HoursC `var' Dependent
+}
+
+*******************************************************************************
+tab1 DisabledCarer NoDCarer
+
+* Function to create graphs for each dependent variable and unpaid care. 
+program define DisabledCarer
+    args var type
+    * Run the regression model
+    if "`type'" == "Dependent" {
+        xtlogit `var' Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated NoDCarer if DisabledCarer==1 | NoDCarer==1
+    }
+    est store `var'_DC2
+end
+
+* Loop over each dependent for Unpaid Carer
+foreach var of local Dependent_Variables {
+    DisabledCarer `var' Dependent
+}
+
+
+*******************************************************************************
+								*PartTime*
+*******************************************************************************
+
+coefplot (PartTime_LC2, label("Location Care")) (PartTime_NC2, label("Number Caring For")) (PartTime_HC2, label("Hours Caring")) (PartTime_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("Unpaid Carer Comparison", size(medium) pos(12)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of working Part-Time", span size(*.7) margin(vsmall)) ///
+caption("This graph shows the results for 5 separate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+ 
+	 
+*******************************************************************************
+								*TempJob*
+*******************************************************************************
+
+coefplot (TempJob_LC2, label("Location Care")) (TempJob_NC2, label("Number Caring For")) (TempJob_HC2, label("Hours Caring")) (TempJob_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("Unpaid Carer Comparison", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of Employment being Temporary", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall)) 
+	 
+*******************************************************************************
+								*ZeroHours*
+*******************************************************************************
+
+coefplot (ZeroHours_LC2, label("Location Care")) (ZeroHours_NC2, label("Number Caring For")) (ZeroHours_HC2, label("Hours Caring")) (ZeroHours_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("Unpaid Carer Comparison", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of Employment being a Zero Hour Contract", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall)) 
+
+*******************************************************************************
+								*FlexiTime*
+*******************************************************************************
+
+
+coefplot (FlexiTime_LC2, label("Location Care")) (FlexiTime_NC2, label("Number Caring For")) (FlexiTime_HC2, label("Hours Caring")) (FlexiTime_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("Unpaid Carer Comparison", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of working in a job with flexible hours", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall)) 
+
+
+*******************************************************************************
+								*WorkHome*
+*******************************************************************************
+
+coefplot (WorkHome_LC2, label("Location Care")) (WorkHome_NC2, label("Number Caring For")) (WorkHome_HC2, label("Hours Caring")) (WorkHome_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("Unpaid Carer Comparison", size(medium)) 
+
+*******************************************************************************
+								*JobStress*
+*******************************************************************************
+
+coefplot (JobStress_LC2, label("Location Care")) (JobStress_NC2, label("Number Caring For")) (JobStress_HC2, label("Hours Caring")) (JobStress_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("Unpaid Carer Comparison", size(medium)) ///
+	 
+*******************************************************************************
+							*MayLoseJob*
+*******************************************************************************
+
+coefplot (MayLoseJob_LC2, label("Location Care")) (MayLoseJob_NC2, label("Number Caring For")) (MayLoseJob_HC2, label("Hours Caring")) (MayLoseJob_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Fear of Losing Employment by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the fear of losing employment", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+	 
+	 
+	 
+*******************************************************************************
+							*MayQuitJob*
+*******************************************************************************
+
+coefplot (MayQuitJob_LC1, label("Location Care")) (MayQuitJob_NC2, label("Number Caring For")) (MayQuitJob_HC2, label("Hours Caring")) (MayQuitJob_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Considers Leaving Employment by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of leaving employment", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+	 
+	  
+
+*******************************************************************************
+							*PublicCompany*
+*******************************************************************************
+
+
+coefplot (PublicCompany_LC2, label("Location Care")) (PublicCompany_NC2, label("Number Caring For")) (PublicCompany_HC2, label("Hours Caring")) (PublicCompany_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Likelihood of Working in the Public Sector by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of working in the public sector compared to the private sector", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+	 
+	  
+	 
+*******************************************************************************
+						*ManagerResponsibility*
+*******************************************************************************
+
+coefplot (ManagerResponsibility_LC2, label("Location Care")) (ManagerResponsibility_NC2, label("Number Caring For")) (ManagerResponsibility_HC2, label("Hours Caring")) (ManagerResponsibility_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Management Responsibility by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood employment having management responsibility", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+	 
+	 
+*******************************************************************************
+							*RedundantSacked*
+*******************************************************************************
+	
+ 
+coefplot (RedundantSacked_LC2, label("Location Care")) (RedundantSacked_NC2, label("Number Caring For")) (RedundantSacked_HC2, label("Hours Caring")) (RedundantSacked_DC2, label("Disabled Carer")), ///
+drop(_cons | *.hindu) ///
+scheme(white_tableau) ///
+legend(pos(6) ring(2) col(3) size(vsmall)) ///
+aspect(0) ///
+graphregion(fcolor(white)) ///
+xlabel(, notick) ///
+grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+ylabel(, labsize(vsmall) notick) ///
+xline(0, lcolor(black) lwidth(medium)) ///
+msize(vsmall) msymbol(D) clwidth(vthin) ///
+mlabposition(2) mlabgap(-.5) mlabsize(small) /// 
+keep(UnpaidCarer HouseholdCarer NonResidentCarer Care1 Care2 Care3or4 Under10 Under19 Over20 Over50 DisabledCarer NoDCarer) ///
+coeflabels( ///
+    UnpaidCarer = "Unpaid Carer" ///
+    HouseholdCarer = "Household Carer" ///
+    NonResidentCarer = "Non-Resident Carer" ///
+    Care1 = "Cares 1 Person" ///
+    Care2 = "Cares 2 People" ///
+    Care3or4 = "Cares 3+ People" ///
+    Under10 = "Under 10" ///
+    Under19 = "Under 19" ///
+    Over20 = "Over 20" ///
+    Over50 = "Over 50" ///
+    DisabledCarer = "Carer with Disability" ///
+    NoDCarer = "Carer No Disability" ///
+    ) ///
+title("UKHLS: Redundant/Sacked by Unpaid Care Characteristics", size(medium)) ///
+note("This graph plots coefficients from xtlogit models, looking at the likelihood of being made Redundant/Sacked", span size(*.7) margin(vsmall)) ///
+	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
