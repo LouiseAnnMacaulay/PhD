@@ -1,0 +1,888 @@
+
+
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+					*LIFE SATISFACTION INTERACTIONS*
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+*******************************************************************************
+
+
+
+
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+********************************************************************************
+
+program define UnpaidCare
+    args var type
+    * Run the regression model
+    if "`type'" == "UnpaidCare1" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.UnpaidCarer##i.`var'
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term
+    testparm i.`var'#i.UnpaidCarer
+    
+    * Extract the p-value
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance
+    if pval < 0.05 {
+        di "Significant interaction for `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) UnpaidCarer=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Unpaid Carer") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylabel(none) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_UnpaidCarer.gph, replace)
+    }
+    else {
+		di "Non-significant interaction for `var' with p-value = " pval
+* Non-significant interaction: use tab2 scheme
+		margins, at(`var'=(0(1)1) UnpaidCarer=(0(1)1)) level(95)
+	marginsplot, scheme(tab2) ///
+		plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+		plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+		recastci(rarea) ciopts(fcolor(%40)) ///
+		title("Unpaid Carer") ///
+		xsize(5) ysize(5) ///
+		xlab(, glcolor(gs15) glpattern(solid)) ///
+		ylabel(none) ///
+		ytitle("Life Satisfaction") ///
+		legend(pos(6) ring(2) col(1) size(vsmall)) ///
+		xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+		xtitle("`off'") ///
+		graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+		saving(`var'_UnpaidCarer.gph, replace)
+	 }
+end
+
+
+* Loop over each health condition
+foreach var of local Dependent_Variables {
+    UnpaidCare `var' UnpaidCare1
+}
+
+
+
+*******************************************************************************
+						*LOCATION - INTERACTION*
+*******************************************************************************
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+* Define a function to run regression, test significance, and create graphs for each dependent variable and care location
+program define CaresHome
+    args var type
+    * Run the regression model
+    if "`type'" == "HomeCare" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.HouseholdCarer i.`var'##i.NonResidentCarer
+    }
+    est store `var'
+
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.HouseholdCarer#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+ 
+    * Run margins and marginsplot based on significance for DisabledCarer
+    * Run margins and marginsplot based on significance
+    if pval < 0.05 {
+        di "Significant interaction for `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) HouseholdCarer=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Cares at Home") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylabel(none) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_HouseholdCarer.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) HouseholdCarer=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Cares at Home") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylabel(none) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_HouseholdCarer.gph, replace)
+    }
+end
+
+
+* Loop over each health condition
+foreach var of local Dependent_Variables {
+    CaresHome `var' HomeCare
+}
+
+
+*******************************************************************************
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+* Define a function to run regression, test significance, and create graphs for each dependent variable and care location
+program define CaresOutsideHome
+    args var type
+    * Run the regression model
+    if "`type'" == "OutsideHomeCare" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated HouseholdCarer i.`var'##i.NonResidentCarer
+    }
+    est store `var'
+
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.NonResidentCarer#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for DisabledCarer and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) NonResidentCarer=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Non-Resident Care") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_NonResidentCarer.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for DisabledCarer and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) NonResidentCarer=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Non-Resident Care") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_NonResidentCarer.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var of local Dependent_Variables {
+    CaresOutsideHome `var' OutsideHomeCare
+}
+
+
+*******************************************************************************
+					*NUMBER CARING FOR - INTERACTION*
+*******************************************************************************
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked ZeroHours"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+********************************************************************************
+
+program define Cares1
+    args var type
+    * Run the regression model
+    if "`type'" == "Carer1" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Care1 i.`var'##i.Care2 i.`var'##i.Care3or4
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Care1#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for DisabledCarer and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Care1=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Care 1 Person") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Care1.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for DisabledCarer and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Care1=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Care 1 Person") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Care1.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Cares1 `var' Carer1
+}
+
+*******************************************************************************
+program define Cares2
+    args var type
+    * Run the regression model
+    if "`type'" == "Carer2" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Care1 i.`var'##i.Care2 i.`var'##i.Care3or4
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Care2#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for Care2 and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Care2=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Care 2 People") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Care2.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for Care2 and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Care2=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Care 2 People") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Care2.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Cares2 `var' Carer2
+}
+
+********************************************************************************
+
+*Had to remove: ZeroHours RedundantSacked
+
+local Dependent_Variables "PEET Employed PartTime TempJob FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+program define Cares3
+    args var type
+    * Run the regression model
+    if "`type'" == "Carer3" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Care1 i.`var'##i.Care2 i.`var'##i. Care3or4
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Care3or4#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for Care2 and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Care3or4=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Care 3+ People") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Care3.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for Care2 and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Care3or4=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Care 3+ People") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Care3.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Cares3 `var' Carer3
+}
+
+
+*******************************************************************************
+						*HOURS - INTERACTION*
+*******************************************************************************
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+********************************************************************************
+
+program define Hours10
+    args var type
+    * Run the regression model
+    if "`type'" == "Hour10" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Under10 i.`var'##i.Under19 i.`var'##i.Over20 i.`var'##i.Over50
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Under10#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for Under10 and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Under10=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Under 10 Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Under10.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for Under10 and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Under10=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Under 10 Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Under10.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Hours10 `var' Hour10
+}
+
+********************************************************************************
+
+program define Hours19
+    args var type
+    * Run the regression model
+    if "`type'" == "Hour19" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Under10 i.`var'##i.Under19 i.`var'##i.Over20 i.`var'##i.Over50
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Under19#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for Under10 and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Under19=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("10-19 Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Under19.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for Under19 and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Under19=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("10-19 Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Under19.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Hours19 `var' Hour19
+}
+
+*******************************************************************************
+
+********************************************************************************
+
+program define Hours20
+    args var type
+    * Run the regression model
+    if "`type'" == "Hour20" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Under10 i.`var'##i.Under19 i.`var'##i.Over20 i.`var'##i.Over50
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Over20#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for Under10 and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Over20=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("20-49 Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Over20.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for Under19 and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Over20=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("20-49 Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Over20.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Hours20 `var' Hour20
+}
+
+*******************************************************************************
+* ZeroHours RedundantSacked
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility"
+
+program define Hours50
+    args var type
+    * Run the regression model
+    if "`type'" == "Hour50" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.Under10 i.`var'##i.Under19 i.`var'##i.Over20 i.`var'##i.Over50
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.Over50#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for Over50 and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) Over50=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("50+ Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Over50.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for Over50 and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) Over50=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("50+ Hours") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_Over50.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    Hours50 `var' Hour50
+}
+
+
+*******************************************************************************
+					*DISABILITY & CARE - INTERACTION*
+*******************************************************************************
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+********************************************************************************
+
+program define CarerD
+    args var type
+    * Run the regression model
+    if "`type'" == "DisabledCarer" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.DisabledCarer i.`var'##i.NoDCarer
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.DisabledCarer#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for DisabledCarer and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) DisabledCarer=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Disabled Carer") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_DisabledCarer.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for DisabledCarer and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) DisabledCarer=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Disabled Carer") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_DisabledCarer.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    CarerD `var' DisabledCarer
+}
+
+********************************************************************************
+
+* Define health conditions and symptoms
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+
+* Drop existing program definitions if they exist
+program drop _all
+
+program define CarerND
+    args var type
+    * Run the regression model
+    if "`type'" == "NDisabledCarer" {
+        xtlogit SatisfiedLife Fem dvage Age2 HighEducation White AfricanCaribbean Asian Indian Arab Mixed Other Single Seperated i.`var'##i.DisabledCarer i.`var'##i.NoDCarer
+    }
+    est store `var'
+    
+    * Test the significance of the interaction term for DisabledCarer
+    testparm i.NoDCarer#i.`var'
+    * Extract the p-value for DisabledCarer
+    scalar pval = r(p)
+    
+    * Run margins and marginsplot based on significance for DisabledCarer
+    if pval < 0.05 {
+        di "Significant interaction for NoDCarer and `var' with p-value = " pval
+        * Significant interaction: use Rainbow scheme
+        margins, at(`var'=(0(1)1) NoDCarer=(0(1)1)) level(95)
+        marginsplot, scheme(Rainbow) ///
+            plot1opts(lwidth(medium) lcolor(orange_red) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(dkorange) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Carer No Disability") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_NoDCarer.gph, replace)
+    }
+    else {
+        di "Non-significant interaction for NoDCarer and `var' with p-value = " pval
+        * Non-significant interaction: use tab2 scheme
+        margins, at(`var'=(0(1)1) NoDCarer=(0(1)1)) level(95)
+        marginsplot, scheme(tab2) ///
+			plot1opts(lwidth(medium) lcolor(navy) lpattern(solid)) ///
+			plot2opts(lwidth(medium) lcolor(edkblue) lpattern(dash)) ///
+            recastci(rarea) ciopts(fcolor(%40)) ///
+            title("Carer No Disability") ///
+            xsize(5) ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+			xlabel(0 "`var'= 0" 1 "`var'= 1", labsize(vsmall)) ///
+			xtitle("`off'") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+			graphregion(margin(l+5 r+5)) /// Adjusts the left and right margins
+            saving(`var'_NoDCarer.gph, replace)
+    }
+    
+end
+
+* Loop over each health condition
+foreach var in `Dependent_Variables' {
+    CarerND `var' NDisabledCarer
+}
+
+
+********************************************************************************
+						*GRAPH - INTERACTIONS*
+*******************************************************************************
+
+*PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked
+
+graph combine PEET_UnpaidCarer.gph PEET_HouseholdCarer.gph PEET_NonResidentCarer.gph PEET_Care1.gph PEET_Care2.gph PEET_Care3.gph PEET_Under10.gph PEET_Under19.gph PEET_Over20.gph PEET_Over50.gph PEET_NoDCarer.gph PEET_DisabledCarer.gph, name(Combined_PEET, replace) title("UKHLS: Life Satisfaction, Unpaid Care and PEET", size(medium)) ///
+note("This graph plots interactions between life satisfaction, PEET and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine PartTime_NoDCarer.gph PartTime_DisabledCarer.gph PartTime_UnpaidCarer.gph PartTime_HouseholdCarer.gph PartTime_NonResidentCarer.gph PartTime_Care1.gph PartTime_Care2.gph PartTime_Care3.gph PartTime_Under10.gph PartTime_Under19.gph PartTime_Over20.gph PartTime_Over50.gph, , name(Combined_PartTime, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Part-Time", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Part-Time and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine TempJob_NoDCarer.gph TempJob_DisabledCarer.gph TempJob_UnpaidCarer.gph TempJob_HouseholdCarer.gph TempJob_NonResidentCarer.gph TempJob_Care1.gph TempJob_Care2.gph TempJob_Care3or4.gph TempJob_Under10.gph TempJob_Under19.gph TempJob_Over20.gph TempJob_Over50.gph, , name(Combined_TempJob, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Temporary Employment", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Temporary Employment and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine ZeroHours_NoDCarer.gph ZeroHours_DisabledCarer.gph ZeroHours_UnpaidCarer.gph ZeroHours_HouseholdCarer.gph ZeroHours_NonResidentCarer.gph ZeroHours_Care1.gph ZeroHours_Care2.gph ZeroHours_Care3.gph ZeroHours_Under10.gph ZeroHours_Under19.gph ZeroHours_Over20.gph ZeroHours_Over50.gph, , name(Combined_ZeroHours, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Zero Hour Employment", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Zero Hour Employment and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine FlexiTime_NoDCarer.gph FlexiTime_DisabledCarer.gph FlexiTime_UnpaidCarer.gph FlexiTime_HouseholdCarer.gph FlexiTime_NonResidentCarer.gph FlexiTime_Care1.gph FlexiTime_Care2.gph FlexiTime_Care3or4.gph FlexiTime_Under10.gph FlexiTime_Under19.gph FlexiTime_Over20.gph FlexiTime_Over50.gph, , name(Combined_PEET, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Flexible Working", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Flexible Working and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine WorkHome_NoDCarer.gph WorkHome_DisabledCarer.gph WorkHome_UnpaidCarer.gph WorkHome_HouseholdCarer.gph WorkHome_NonResidentCarer.gph WorkHome_Care1.gph WorkHome_Care2.gph WorkHome_Care3or4.gph WorkHome_Under10.gph WorkHome_Under19.gph WorkHome_Over20.gph WorkHome_Over50.gph, , name(Combined_WorkHome, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Working from Home", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Working from Home and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine JobStress_NoDCarer.gph JobStress_DisabledCarer.gph JobStress_UnpaidCarer.gph JobStress_HouseholdCarer.gph JobStress_NonResidentCarer.gph JobStress_Care1.gph JobStress_Care2.gph JobStress_Care3or4.gph JobStress_Under10.gph JobStress_Under19.gph JobStress_Over20.gph JobStress_Over50.gph, , name(Combined_JobStress, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Job Stress", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Job Stress and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine MayLoseJob_NoDCarer.gph MayLoseJob_DisabledCarer.gph MayLoseJob_UnpaidCarer.gph MayLoseJob_HouseholdCarer.gph MayLoseJob_NonResidentCarer.gph MayLoseJob_Care1.gph MayLoseJob_Care2.gph MayLoseJob_Care3or4.gph MayLoseJob_Under10.gph MayLoseJob_Under19.gph MayLoseJob_Over20.gph MayLoseJob_Over50.gph, , name(Combined_MayLoseJob, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Fear of Job Loss", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Fear of Job Loss and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine MayQuitJob_NoDCarer.gph MayQuitJob_DisabledCarer.gph MayQuitJob_UnpaidCarer.gph MayQuitJob_HouseholdCarer.gph MayQuitJob_NonResidentCarer.gph MayQuitJob_Care1.gph MayQuitJob_Care2.gph MayQuitJob_Care3or4.gph MayQuitJob_Under10.gph MayQuitJob_Under19.gph MayQuitJob_Over20.gph MayQuitJob_Over50.gph, , name(Combined_PEET, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Considers Quiting Employment", size(medium)) ///
+note("This graph plots interactions between life satisfaction, PEET and Considers Quiting Employment, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine PublicCompany_NoDCarer.gph PublicCompany_DisabledCarer.gph PublicCompany_UnpaidCarer.gph PublicCompany_HouseholdCarer.gph PublicCompany_NonResidentCarer.gph PublicCompany_Care1.gph PublicCompany_Care2.gph PublicCompany_Care3.gph PublicCompany_Under10.gph PublicCompany_Under19.gph PublicCompany_Over20.gph PublicCompany_Over50.gph, , name(Combined_PublicCompany, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Public Sector Employment", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Public Sector Employment and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine ManagerResponsibility_NoDCarer.gph ManagerResponsibility_DisabledCarer.gph ManagerResponsibility_UnpaidCarer.gph ManagerResponsibility_HouseholdCarer.gph ManagerResponsibility_NonResidentCarer.gph ManagerResponsibility_Care1.gph ManagerResponsibility_Care2.gph ManagerResponsibility_Care3.gph ManagerResponsibility_Under10.gph ManagerResponsibility_Under19.gph ManagerResponsibility_Over20.gph ManagerResponsibility_Over50.gph, , name(Combined_PEET, replace) title("UKHLS: Life Satisfaction, Unpaid Care and Management Responsibility", size(medium)) ///
+note("This graph plots interactions between life satisfaction, Management Responsibility and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
+
+graph combine RedundantSacked_NoDCarer.gph RedundantSacked_DisabledCarer.gph RedundantSacked_UnpaidCarer.gph RedundantSacked_HouseholdCarer.gph RedundantSacked_NonResidentCarer.gph RedundantSacked_Care1.gph RedundantSacked_Care2.gph RedundantSacked_Care3.gph RedundantSacked_Under10.gph RedundantSacked_Under19.gph RedundantSacked_Over20.gph RedundantSacked_Over50.gph, , name(Combined_RedundantSacked, replace) title("UKHLS: Life Satisfaction, Unpaid Care and being made Redundant/Sacked", size(medium)) ///
+note("This graph plots interactions between life satisfaction, being made Redundant/Sacked and Unpaid Care, from separate logit regression models, using UKHLS", span size (*.6) margin(vsmall)) ///
+caption("Graphs in orange have significant interaction effects. Graphs in blue do not have significant interaction effects. The dashed line shows Unpaid Care Measurements", span size (*.4) margin(vsmall)) xsize(8)
