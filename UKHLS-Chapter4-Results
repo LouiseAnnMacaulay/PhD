@@ -327,3 +327,836 @@ PEET, HEALTH AND LIFE SATISFACTION (UKHLS)
 . 
 end of do-file
 
+
+
+
+
+*****************************************************************************************************************************************
+Time Analysis Results - Disability (UKHLS)
+*****************************************************************************************************************************************
+Most complex modelling I have done during the PhD, so I have pasted the syntax and the results:
+*****************************************************************************************************************************************
+
+
+
+. tab event_period if e(sample)
+
+    event_period |      Freq.     Percent        Cum.
+-----------------+-----------------------------------
+  3 waves before |      1,650        7.13        7.13
+  2 waves before |      2,529       10.92       18.05
+   1 wave before |      3,557       15.37       33.42
+Disability onset |      5,698       24.61       58.03
+    1 wave after |      5,340       23.07       81.10
+   2 waves after |      4,375       18.90      100.00
+-----------------+-----------------------------------
+           Total |     23,149      100.00
+
+
+Disanility Onset Main Models
+
+
+--------------------------------------------------------------------------------------------------
+                                        (1)                       (2)                       (3)   
+                                 Employment                      PEET           Employment Exit   
+--------------------------------------------------------------------------------------------------
+main                                                                                              
+acquired_disability                   0.825**                   0.652***                  1.330*  
+                              [0.720,0.944]             [0.561,0.759]             [1.070,1.653]   
+
+Fem                                   0.659***                  0.598***                  1.395***
+                              [0.541,0.803]             [0.475,0.751]             [1.163,1.674]   
+
+age                                   1.549***                  1.078**                   0.688***
+                              [1.470,1.633]             [1.023,1.137]             [0.654,0.725]   
+
+Age2                                  0.995***                  0.999***                  1.004***
+                              [0.994,0.995]             [0.998,0.999]             [1.004,1.005]   
+
+HighEducation                         1.877***                  1.688***                  0.902   
+                              [1.516,2.323]             [1.317,2.164]             [0.757,1.074]   
+
+Single                                0.924                     0.777                     1.123   
+                              [0.701,1.216]             [0.585,1.030]             [0.880,1.433]   
+
+Separated                             1.448                     1.429                     0.835   
+                              [0.967,2.169]             [0.961,2.125]             [0.634,1.100]   
+
+WhiteOther                            0.583                     0.733                     1.091   
+                              [0.330,1.028]             [0.328,1.634]             [0.662,1.799]   
+
+OtherEthnicity                        0.563***                  0.725*                    1.621***
+                              [0.437,0.725]             [0.557,0.943]             [1.283,2.047]   
+--------------------------------------------------------------------------------------------------
+N                                     14712                     14617                     22547   
+--------------------------------------------------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+Time Event Results:
+
+-----------------------------------------------------------------------
+                                        (1)                       (2)   
+                                 Employment                      PEET   
+------------------------------------------------------------------------
+main                                                                    
+3 Waves Before                        0.977                     1.169   
+                              [0.814,1.174]             [0.924,1.478]   
+
+2 Waves Before                        1.023                     1.092   
+                              [0.883,1.185]             [0.917,1.299]   
+
+1 Wave Before (Ref~)                  1.000                     1.000   
+                              [1.000,1.000]             [1.000,1.000]   
+
+Disability Onset                      0.847*                    0.703***
+                              [0.743,0.965]             [0.608,0.813]   
+
+1 Wave After                          0.757***                  0.634***
+                              [0.658,0.870]             [0.542,0.742]   
+
+2 Waves After                         0.792**                   0.633***
+                              [0.675,0.929]             [0.530,0.757]   
+
+Fem                                   0.663***                  0.631***
+                              [0.567,0.777]             [0.523,0.760]   
+
+age                                   1.505***                  1.118***
+                              [1.444,1.569]             [1.071,1.167]   
+
+Age2                                  0.995***                  0.998***
+                              [0.995,0.996]             [0.998,0.999]   
+
+HighEducation                         1.713***                  1.598***
+                              [1.447,2.028]             [1.319,1.935]   
+
+Single                                0.928                     0.830   
+                              [0.743,1.159]             [0.657,1.049]   
+
+Separated                             1.243                     1.265   
+                              [0.911,1.697]             [0.924,1.732]   
+
+WhiteOther                            0.828                     1.032   
+                              [0.542,1.265]             [0.563,1.892]   
+
+OtherEthnicity                        0.607***                  0.822   
+                              [0.501,0.735]             [0.662,1.021]   
+------------------------------------------------------------------------
+N                                     23149                     23014   
+------------------------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+
+
+RE v FE comparison:
+
+------------------------------------------------------------------------
+                                        (1)                       (2)   
+                             Random Effects             Fixed Effects   
+------------------------------------------------------------------------
+Employed                                                                
+acquired_disability                   0.811***                  0.688***
+                              [0.718,0.916]             [0.584,0.810]   
+
+Fem                                   0.316***                          
+                              [0.248,0.402]                             
+
+age                                   2.784***                  3.063***
+                              [2.622,2.956]             [2.717,3.453]   
+
+Age2                                  0.988***                  0.987***
+                              [0.987,0.989]             [0.986,0.989]   
+
+HighEducation                         6.863***                 10.220***
+                              [5.444,8.654]            [5.630,18.555]   
+
+Single                                1.325*                    1.792*  
+                              [1.014,1.732]             [1.147,2.799]   
+
+Separated                             1.601**                   2.161** 
+                              [1.148,2.232]             [1.273,3.666]   
+
+WhiteOther                            0.351***                          
+                              [0.193,0.639]                             
+
+OtherEthnicity                        0.129***                          
+                              [0.097,0.172]                             
+------------------------------------------------------------------------
+/                                                                       
+lnsig2u                              14.262***                          
+                            [12.956,15.699]                             
+------------------------------------------------------------------------
+N                                     23514                      5658   
+------------------------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+
+
+
+
+
+********************************************************************************
+* DISABILITY ONSET AND LABOUR MARKET PARTICIPATION
+* UKHLS
+*
+* Purpose:
+* Examine employment and PEET trajectories surrounding the first observed
+* onset of disability among respondents who entered the panel non-disabled.
+*
+* Main analyses:
+*   1. Employment at disability onset
+*   2. PEET at disability onset
+*   3. Employment exit at disability onset
+*   4. Event-time employment model
+*   5. Event-time PEET model
+*   6. Random-effects employment model
+*   7. Fixed-effects employment model
+*
+* Event-time reference:
+* One wave before first observed disability onset
+********************************************************************************
+
+
+********************************************************************************
+* 0. PREPARATION
+********************************************************************************
+
+sort pidp wave
+
+
+********************************************************************************
+* 1. IDENTIFY FIRST OBSERVATION FOR EACH PERSON
+********************************************************************************
+
+capture drop first_obs
+
+bysort pidp (wave): gen first_obs = (_n==1)
+
+tab first_obs
+
+
+********************************************************************************
+* 2. IDENTIFY PEOPLE DISABLED WHEN THEY ENTER THE PANEL
+*
+* These respondents are excluded from the disability-onset analysis because
+* their transition into disability is not observed during the panel.
+********************************************************************************
+
+capture drop disabled_at_entry
+
+bysort pidp: egen disabled_at_entry = ///
+    max(first_obs==1 & Disabled==1)
+
+tab disabled_at_entry
+
+
+********************************************************************************
+* 3. IDENTIFY FIRST OBSERVED DISABILITY WAVE
+********************************************************************************
+
+capture drop first_disability_wave
+
+bysort pidp (wave): egen first_disability_wave = ///
+    min(cond(Disabled==1, wave, .))
+
+tab first_disability_wave, missing
+
+
+********************************************************************************
+* 4. IDENTIFY DISABILITY-ONSET WAVE
+*
+* acquired_disability = 1 only in the first wave in which disability is
+* observed.
+********************************************************************************
+
+capture drop acquired_disability
+
+gen acquired_disability = ///
+    (wave==first_disability_wave) ///
+    if first_disability_wave<.
+
+tab acquired_disability, missing
+
+
+********************************************************************************
+* 5. CREATE EVENT-TIME VARIABLE
+*
+* disability_eventtime:
+*
+* -3 = three waves before disability onset
+* -2 = two waves before
+* -1 = one wave before
+*  0 = first observed disability wave
+* +1 = one wave after
+* +2 = two waves after
+********************************************************************************
+
+capture drop disability_eventtime
+
+gen disability_eventtime = ///
+    wave - first_disability_wave ///
+    if first_disability_wave<.
+
+tab disability_eventtime, missing
+
+
+********************************************************************************
+* 6. CREATE SHIFTED EVENT-PERIOD VARIABLE
+*
+* disability_eventtime      event_period
+*
+*       -3                       0
+*       -2                       1
+*       -1                       2   <-- REFERENCE
+*        0                       3
+*       +1                       4
+*       +2                       5
+********************************************************************************
+
+capture drop event_period
+
+gen event_period = ///
+    disability_eventtime + 3 ///
+    if inrange(disability_eventtime,-3,2)
+
+label define event_period_lbl ///
+    0 "3 waves before" ///
+    1 "2 waves before" ///
+    2 "1 wave before" ///
+    3 "Disability onset" ///
+    4 "1 wave after" ///
+    5 "2 waves after", replace
+
+label values event_period event_period_lbl
+
+tab event_period, missing
+
+
+********************************************************************************
+* 7. CREATE PREVIOUS-WAVE EMPLOYMENT
+*
+* Only consecutive waves are used to define previous-wave employment.
+********************************************************************************
+
+capture drop Employed_L1
+
+bysort pidp (wave): gen Employed_L1 = ///
+    Employed[_n-1] ///
+    if wave==wave[_n-1]+1
+
+tab Employed_L1, missing
+
+
+********************************************************************************
+* 8. CREATE EMPLOYMENT-EXIT VARIABLE
+*
+* LostEmployment = 1:
+* Employed in the immediately preceding wave and not employed in current wave.
+*
+* LostEmployment = 0:
+* Employed in the immediately preceding wave and remains employed.
+********************************************************************************
+
+capture drop LostEmployment
+
+gen LostEmployment = ///
+    (Employed_L1==1 & Employed==0) ///
+    if Employed_L1==1 & Employed<.
+
+tab LostEmployment, missing
+
+
+********************************************************************************
+* 9. CHECK VARIABLE CONSTRUCTION
+********************************************************************************
+
+sort pidp wave
+
+list pidp wave ///
+    Disabled ///
+    first_obs ///
+    disabled_at_entry ///
+    first_disability_wave ///
+    disability_eventtime ///
+    event_period ///
+    acquired_disability ///
+    Employed_L1 ///
+    Employed ///
+    LostEmployment ///
+    if first_disability_wave<. ///
+    & disabled_at_entry==0 ///
+    in 1/150, sepby(pidp)
+
+
+********************************************************************************
+* 10. SAMPLE COUNTS
+********************************************************************************
+
+capture drop tag_person
+
+egen tag_person = tag(pidp)
+
+* Number of respondents who acquire disability during observation
+* after entering the survey non-disabled
+
+count if tag_person==1 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+* Number of person-wave observations for this group
+
+count if first_disability_wave<. ///
+    & disabled_at_entry==0
+
+
+********************************************************************************
+* 11. MODEL 1
+* EMPLOYMENT BEFORE VS AT DISABILITY ONSET
+********************************************************************************
+
+svy: logit Employed ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityOnset_Employed
+
+
+********************************************************************************
+* 12. MODEL 2
+* PEET BEFORE VS AT DISABILITY ONSET
+********************************************************************************
+
+svy: logit PEET ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityOnset_PEET
+
+
+********************************************************************************
+* 13. MODEL 3
+* EMPLOYMENT EXIT AT DISABILITY ONSET
+*
+* Among observations where the respondent was employed in the immediately
+* preceding wave, test whether employment exit is more likely in the
+* disability-onset wave.
+********************************************************************************
+
+svy: logit LostEmployment ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if Employed_L1==1 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityEmploymentExit
+
+
+********************************************************************************
+* 14. MODEL 4
+* EVENT-TIME MODEL: EMPLOYMENT
+*
+* Reference category:
+* event_period = 2 = one wave before disability onset.
+********************************************************************************
+
+svy: logit Employed ///
+    ib2.event_period ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if event_period<. ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityEventStudy
+
+
+********************************************************************************
+* 15. MODEL 5
+* EVENT-TIME MODEL: PEET
+********************************************************************************
+
+svy: logit PEET ///
+    ib2.event_period ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if event_period<. ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityEventStudy_PEET
+
+
+********************************************************************************
+* 16. MODEL 6
+* RANDOM-EFFECTS EMPLOYMENT MODEL
+********************************************************************************
+
+xtlogit Employed ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0, ///
+    re i(pidp)
+
+est store DisabilityOnset_RE
+
+
+********************************************************************************
+* 17. MODEL 7
+* FIXED-EFFECTS EMPLOYMENT MODEL
+*
+* Time-invariant sex and ethnicity variables are not included.
+********************************************************************************
+
+xtlogit Employed ///
+    acquired_disability ///
+    dvage Age2 HighEducation ///
+    Single Seperated ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0, ///
+    fe i(pidp)
+
+est store DisabilityOnset_FE
+
+
+********************************************************************************
+* 18. MARGINS: SIMPLE EMPLOYMENT-ONSET MODEL
+********************************************************************************
+
+est restore DisabilityOnset_Employed
+
+margins, at(acquired_disability=(0 1))
+
+
+********************************************************************************
+* 19. EVENT-TIME MARGINS: EMPLOYMENT
+********************************************************************************
+
+est restore DisabilityEventStudy
+
+margins event_period
+
+matrix EmploymentMargins = r(table)
+
+matrix list EmploymentMargins
+
+
+********************************************************************************
+* 20. EVENT-TIME MARGINS: PEET
+********************************************************************************
+
+est restore DisabilityEventStudy_PEET
+
+margins event_period
+
+matrix PEETMargins = r(table)
+
+matrix list PEETMargins
+
+
+********************************************************************************
+* 21. FINAL THESIS FIGURE
+* PANEL A: EMPLOYMENT
+********************************************************************************
+
+est restore DisabilityEventStudy
+
+margins event_period
+
+marginsplot, ///
+    recast(line) ///
+    recastci(rarea) ///
+    scheme(white_tableau) ///
+    xlabel( ///
+        0 "3 waves before" ///
+        1 "2 waves before" ///
+        2 "1 wave before" ///
+        3 "Disability onset" ///
+        4 "1 wave after" ///
+        5 "2 waves after", ///
+        angle(45)) ///
+    xtitle("") ///
+    ytitle("Predicted Probability") ///
+    title("A. Employment", size(medium)) ///
+    legend(off) ///
+    xsize(7) ysize(5) ///
+    name(DisabilityEmploymentMargins, replace)
+
+
+********************************************************************************
+* 22. FINAL THESIS FIGURE
+* PANEL B: PEET
+********************************************************************************
+
+est restore DisabilityEventStudy_PEET
+
+margins event_period
+
+marginsplot, ///
+    recast(line) ///
+    recastci(rarea) ///
+    scheme(white_tableau) ///
+    xlabel( ///
+        0 "3 waves before" ///
+        1 "2 waves before" ///
+        2 "1 wave before" ///
+        3 "Disability onset" ///
+        4 "1 wave after" ///
+        5 "2 waves after", ///
+        angle(45)) ///
+    xtitle("") ///
+    ytitle("Predicted Probability") ///
+    title("B. Employment, Education or Training", size(medium)) ///
+    legend(off) ///
+    xsize(7) ysize(5) ///
+    name(DisabilityPEETMargins, replace)
+
+
+********************************************************************************
+* 23. COMBINE FINAL THESIS FIGURE
+********************************************************************************
+
+graph combine ///
+    DisabilityEmploymentMargins ///
+    DisabilityPEETMargins, ///
+    col(2) ///
+    title("Labour Market Participation Before and After Disability Onset", ///
+        span size(medium)) ///
+    xsize(14) ysize(6) ///
+    name(DisabilityOnset_Final, replace)
+
+
+********************************************************************************
+* 24. PAIRWISE EVENT-TIME TESTS
+*
+* These tests establish whether changes between adjacent post-onset periods
+* are statistically significant.
+********************************************************************************
+
+capture log close lincomlog
+
+log using "DisabilityOnset_LincomTests.txt", ///
+    text replace name(lincomlog)
+
+
+********************************************************************************
+* EMPLOYMENT: ONSET VS ONE WAVE AFTER
+********************************************************************************
+
+est restore DisabilityEventStudy
+
+display " "
+display "EMPLOYMENT: DISABILITY ONSET VS 1 WAVE AFTER"
+
+lincom 3.event_period - 4.event_period
+
+
+********************************************************************************
+* EMPLOYMENT: ONE WAVE AFTER VS TWO WAVES AFTER
+********************************************************************************
+
+display " "
+display "EMPLOYMENT: 1 WAVE AFTER VS 2 WAVES AFTER"
+
+lincom 4.event_period - 5.event_period
+
+
+********************************************************************************
+* PEET: ONSET VS ONE WAVE AFTER
+********************************************************************************
+
+est restore DisabilityEventStudy_PEET
+
+display " "
+display "PEET: DISABILITY ONSET VS 1 WAVE AFTER"
+
+lincom 3.event_period - 4.event_period
+
+
+********************************************************************************
+* PEET: ONE WAVE AFTER VS TWO WAVES AFTER
+********************************************************************************
+
+display " "
+display "PEET: 1 WAVE AFTER VS 2 WAVES AFTER"
+
+lincom 4.event_period - 5.event_period
+
+
+log close lincomlog
+
+
+********************************************************************************
+* 25. GITHUB OUTPUT 1
+* MAIN DISABILITY-ONSET MODELS
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_Employed ///
+    DisabilityOnset_PEET ///
+    DisabilityEmploymentExit ///
+    using "DisabilityOnset_MainModels.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles( ///
+        "Employment" ///
+        "PEET" ///
+        "Employment Exit" ///
+    ) ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 26. GITHUB OUTPUT 2
+* EVENT-TIME MODELS
+********************************************************************************
+
+esttab ///
+    DisabilityEventStudy ///
+    DisabilityEventStudy_PEET ///
+    using "DisabilityOnset_EventTime.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    order( ///
+        0.event_period ///
+        1.event_period ///
+        2.event_period ///
+        3.event_period ///
+        4.event_period ///
+        5.event_period ///
+    ) ///
+    coeflabels( ///
+        0.event_period "3 Waves Before" ///
+        1.event_period "2 Waves Before" ///
+        2.event_period "1 Wave Before (Reference)" ///
+        3.event_period "Disability Onset" ///
+        4.event_period "1 Wave After" ///
+        5.event_period "2 Waves After" ///
+    ) ///
+    mtitles("Employment" "PEET") ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 27. GITHUB OUTPUT 3
+* RANDOM- AND FIXED-EFFECTS MODELS
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_RE ///
+    DisabilityOnset_FE ///
+    using "DisabilityOnset_RE_FE.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles("Random Effects" "Fixed Effects") ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 28. DISPLAY MAIN RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_Employed ///
+    DisabilityOnset_PEET ///
+    DisabilityEmploymentExit, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles( ///
+        "Employment" ///
+        "PEET" ///
+        "Employment Exit" ///
+    ) ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 29. DISPLAY EVENT-TIME RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    DisabilityEventStudy ///
+    DisabilityEventStudy_PEET, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    order( ///
+        0.event_period ///
+        1.event_period ///
+        2.event_period ///
+        3.event_period ///
+        4.event_period ///
+        5.event_period ///
+    ) ///
+    coeflabels( ///
+        0.event_period "3 Waves Before" ///
+        1.event_period "2 Waves Before" ///
+        2.event_period "1 Wave Before (Reference)" ///
+        3.event_period "Disability Onset" ///
+        4.event_period "1 Wave After" ///
+        5.event_period "2 Waves After" ///
+    ) ///
+    mtitles("Employment" "PEET") ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 30. DISPLAY RANDOM- AND FIXED-EFFECTS RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_RE ///
+    DisabilityOnset_FE, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles("Random Effects" "Fixed Effects") ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 31. OPTIONAL CLEAN-UP
+********************************************************************************
+
+capture drop tag_person
+
+
+
+
