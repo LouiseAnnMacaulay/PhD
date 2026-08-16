@@ -17,7 +17,7 @@ capture program drop RunInteraction
 
 local EmploymentVars ///
     PartTime ///
-    ManagerSupervisor ///
+    PEET ///
     CareFlexibleWork
 
 
@@ -377,30 +377,31 @@ graph combine ///
     ysize(8)
 
 
+
 *******************************************************************************
-* MANAGER / SUPERVISOR GRAPH COMBINE
+* PEET GRAPH COMBINE
 *******************************************************************************
 
 graph combine ///
-    ManagerSupervisor_Carer.gph ///
-    ManagerSupervisor_Hours4.gph ///
-    ManagerSupervisor_Hours19.gph ///
-    ManagerSupervisor_Hours49.gph ///
-    ManagerSupervisor_Hours50.gph ///
-    ManagerSupervisor_HoursV.gph ///
-    ManagerSupervisor_Under1Year.gph ///
-    ManagerSupervisor_Under5Years.gph ///
-    ManagerSupervisor_Under10Years.gph ///
-    ManagerSupervisor_Over10Years.gph ///
-    ManagerSupervisor_CareAtHome.gph ///
-    ManagerSupervisor_CareOutsideHome.gph ///
-    ManagerSupervisor_CareMultipleHome.gph ///
-    ManagerSupervisor_GetsHelp.gph ///
-    ManagerSupervisor_CarerNoDisability.gph ///
-    ManagerSupervisor_DisabledCarer.gph, ///
-    name(Combined_ManagerSupervisor, replace) ///
+    PEET_Carer.gph ///
+    PEET_Hours4.gph ///
+    PEET_Hours19.gph ///
+    PEET_Hours49.gph ///
+    PEET_Hours50.gph ///
+    PEET_HoursV.gph ///
+    PEET_Under1Year.gph ///
+    PEET_Under5Years.gph ///
+    PEET_Under10Years.gph ///
+    PEET_Over10Years.gph ///
+    PEET_CareAtHome.gph ///
+    PEET_CareOutsideHome.gph ///
+    PEET_CareMultipleHome.gph ///
+    PEET_GetsHelp.gph ///
+    PEET_CarerNoDisability.gph ///
+    PEET_DisabledCarer.gph, ///
+    name(Combined_PEET, replace) ///
     title( ///
-        "SHS: Life Satisfaction, Managerial Responsibility and Unpaid Care", ///
+        "SHS: Life Satisfaction, PEET and Unpaid Care", ///
         size(medium) ///
     ) ///
     note( ///
@@ -408,6 +409,7 @@ graph combine ///
         span size(*.7) margin(small) ///
     ) ///
     ysize(8)
+
 
 
 *******************************************************************************
