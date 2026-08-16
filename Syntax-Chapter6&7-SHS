@@ -6,12 +6,13 @@
 * PEET
 * PartTime
 * SelfEmployed
+* CareFlexibleWork
 
 ********************************************************************************
 * Likelihood of ... *
 ********************************************************************************
 
-local outcomes PEET PartTime SelfEmployed
+local outcomes PEET PartTime SelfEmployed CareFlexibleWork
 
 
 foreach outcome of local outcomes {
@@ -136,6 +137,465 @@ foreach outcome of local outcomes {
         `outcome'_Help2 ///
         `outcome'_DisC2, ///
         eform b(%8.4g) star stats(N ll bic r2)
+
+
+
+
+
+
+
+
+
+
+*******************************************************************************
+* SHS: LIFE SATISFACTION – EMPLOYMENT × UNPAID CARE
+*
+* Outcome:
+*   LifeSatisfaction (continuous)
+*
+* Estimator:
+*   Weighted linear regression
+*******************************************************************************
+
+capture program drop RunInteraction
+
+
+*******************************************************************************
+* EMPLOYMENT VARIABLES
+*******************************************************************************
+
+local EmploymentVars ///
+    PartTime ///
+    PEET ///
+    CareFlexibleWork ///
+	SelfEmployed
+
+
+*******************************************************************************
+* DEMOGRAPHIC CONTROLS
+*******************************************************************************
+
+global SHS_LS_Controls ///
+    fem ///
+    AgeCat ///
+    HighEducation ///
+    OWhite ///
+    AsianAndOther ///
+    Single ///
+    Seperated
+
+
+*******************************************************************************
+* CARE GROUPS
+*******************************************************************************
+
+local CareGroup1 ///
+    Carer
+
+local CareGroup2 ///
+    Hours4 ///
+    Hours19 ///
+    Hours49 ///
+    Hours50 ///
+    HoursV
+
+local CareGroup3 ///
+    Under1Year ///
+    Under5Years ///
+    Under10Years ///
+    Over10Years
+
+local CareGroup4 ///
+    CareAtHome ///
+    CareOutsideHome ///
+    CareMultipleHome
+
+local CareGroup5 ///
+    GetsHelp
+
+local CareGroup6 ///
+    CarerNoDisability ///
+    DisabledCarer
+
+
+*******************************************************************************
+* PROGRAM: RUN REGRESSION + TEST INTERACTION + MARGINS PLOT
+*******************************************************************************
+
+program define RunInteraction
+
+    args emp care title
+
+
+    *--------------------------------------------------------------------------
+    * MODEL
+    *--------------------------------------------------------------------------
+
+    regress LifeSatisfaction ///
+        $SHS_LS_Controls ///
+        i.`emp'##i.`care' ///
+        [pweight=CombinedWeight]
+
+
+    *--------------------------------------------------------------------------
+    * TEST INTERACTION
+    *--------------------------------------------------------------------------
+
+    capture testparm i.`emp'#i.`care'
+
+    if _rc != 0 {
+
+        display "Skipping `emp' × `care' (interaction not estimable)"
+
+        exit
+    }
+
+    local pval = r(p)
+
+    display "`emp' × `care' interaction p-value = " %6.4f `pval'
+
+
+    *--------------------------------------------------------------------------
+    * ADJUSTED PREDICTED LIFE SATISFACTION
+    *--------------------------------------------------------------------------
+
+    margins, ///
+        at( ///
+            `emp'=(0 1) ///
+            `care'=(0 1) ///
+        ) ///
+        level(95)
+
+
+    *--------------------------------------------------------------------------
+    * CARE VARIABLE LABELS
+    *--------------------------------------------------------------------------
+
+    local care_label "`care'"
+
+    if "`care'" == "Hours4" ///
+        local care_label "0-4 hours"
+
+    if "`care'" == "Hours19" ///
+        local care_label "5-19 hours"
+
+    if "`care'" == "Hours49" ///
+        local care_label "20-49 hours"
+
+    if "`care'" == "Hours50" ///
+        local care_label "50+ hours"
+
+    if "`care'" == "HoursV" ///
+        local care_label "Variable hours"
+
+
+    if "`care'" == "Under1Year" ///
+        local care_label "<1 year"
+
+    if "`care'" == "Under5Years" ///
+        local care_label "1-5 years"
+
+    if "`care'" == "Under10Years" ///
+        local care_label "5-10 years"
+
+    if "`care'" == "Over10Years" ///
+        local care_label "10+ years"
+
+
+    if "`care'" == "CareAtHome" ///
+        local care_label "At home"
+
+    if "`care'" == "CareOutsideHome" ///
+        local care_label "Outside home"
+
+    if "`care'" == "CareMultipleHome" ///
+        local care_label "Multiple homes"
+
+
+    if "`care'" == "GetsHelp" ///
+        local care_label "Receives help"
+
+
+    if "`care'" == "CarerNoDisability" ///
+        local care_label "Carer without disability"
+
+    if "`care'" == "DisabledCarer" ///
+        local care_label "Disabled carer"
+
+
+    if "`care'" == "Carer" ///
+        local care_label "Carer status"
+
+
+    *--------------------------------------------------------------------------
+    * MARGINS PLOT
+    *
+    * Orange = significant interaction
+    * Blue   = non-significant interaction
+    *--------------------------------------------------------------------------
+
+    if `pval' < 0.05 {
+
+        marginsplot, ///
+            xdimension(`emp') ///
+            plotdimension(`care') ///
+            scheme(Rainbow) ///
+            plot1opts( ///
+                lcolor(orange_red) ///
+                lpattern(solid) ///
+            ) ///
+            plot2opts( ///
+                lcolor(dkorange) ///
+                lpattern(dash) ///
+            ) ///
+            recastci(rarea) ///
+            ciopts(fcolor(%40)) ///
+            title("`care_label'") ///
+            ytitle("Life Satisfaction") ///
+            xtitle("") ///
+            xlabel( ///
+                0 "`emp' = 0" ///
+                1 "`emp' = 1", ///
+                labsize(vsmall) ///
+            ) ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(`emp'_`care'.gph, replace)
+
+    }
+
+    else {
+
+        marginsplot, ///
+            xdimension(`emp') ///
+            plotdimension(`care') ///
+            scheme(tab2) ///
+            plot1opts( ///
+                lcolor(navy) ///
+                lpattern(solid) ///
+            ) ///
+            plot2opts( ///
+                lcolor(edkblue) ///
+                lpattern(dash) ///
+            ) ///
+            recastci(rarea) ///
+            ciopts(fcolor(%40)) ///
+            title("`care_label'") ///
+            ytitle("Life Satisfaction") ///
+            xtitle("") ///
+            xlabel( ///
+                0 "`emp' = 0" ///
+                1 "`emp' = 1", ///
+                labsize(vsmall) ///
+            ) ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(`emp'_`care'.gph, replace)
+
+    }
+
+end
+
+
+*******************************************************************************
+* SECTION 1: CARER STATUS
+*******************************************************************************
+
+foreach emp of local EmploymentVars {
+
+    RunInteraction ///
+        `emp' ///
+        Carer ///
+        "Carer × `emp'"
+
+}
+
+
+*******************************************************************************
+* SECTION 2: HOURS OF CARE
+*******************************************************************************
+
+foreach emp of local EmploymentVars {
+
+    foreach care of local CareGroup2 {
+
+        RunInteraction ///
+            `emp' ///
+            `care' ///
+            "Hours × `emp'"
+
+    }
+}
+
+
+*******************************************************************************
+* SECTION 3: DURATION OF CARE
+*******************************************************************************
+
+foreach emp of local EmploymentVars {
+
+    foreach care of local CareGroup3 {
+
+        RunInteraction ///
+            `emp' ///
+            `care' ///
+            "Duration × `emp'"
+
+    }
+}
+
+
+*******************************************************************************
+* SECTION 4: CARE LOCATION
+*******************************************************************************
+
+foreach emp of local EmploymentVars {
+
+    foreach care of local CareGroup4 {
+
+        RunInteraction ///
+            `emp' ///
+            `care' ///
+            "Location × `emp'"
+
+    }
+}
+
+
+*******************************************************************************
+* SECTION 5: HELP WITH CARE
+*******************************************************************************
+
+foreach emp of local EmploymentVars {
+
+    foreach care of local CareGroup5 {
+
+        RunInteraction ///
+            `emp' ///
+            `care' ///
+            "Help × `emp'"
+
+    }
+}
+
+
+*******************************************************************************
+* SECTION 6: CARER DISABILITY STATUS
+*******************************************************************************
+
+foreach emp of local EmploymentVars {
+
+    foreach care of local CareGroup6 {
+
+        RunInteraction ///
+            `emp' ///
+            `care' ///
+            "Disability × `emp'"
+
+    }
+}
+
+
+*******************************************************************************
+* PART-TIME GRAPH COMBINE
+*******************************************************************************
+
+graph combine ///
+    PartTime_Carer.gph ///
+    PartTime_Hours4.gph ///
+    PartTime_Hours19.gph ///
+    PartTime_Hours49.gph ///
+    PartTime_Hours50.gph ///
+    PartTime_HoursV.gph ///
+    PartTime_Under1Year.gph ///
+    PartTime_Under5Years.gph ///
+    PartTime_Under10Years.gph ///
+    PartTime_Over10Years.gph ///
+    PartTime_CareAtHome.gph ///
+    PartTime_CareOutsideHome.gph ///
+    PartTime_CareMultipleHome.gph ///
+    PartTime_GetsHelp.gph ///
+    PartTime_CarerNoDisability.gph ///
+    PartTime_DisabledCarer.gph, ///
+    name(Combined_PartTime, replace) ///
+    title( ///
+        "SHS: Life Satisfaction, Part-Time Employment and Unpaid Care", ///
+        size(medium) ///
+    ) ///
+    note( ///
+        "Orange panels indicate significant interactions; blue panels indicate non-significant interactions.", ///
+        span size(*.7) margin(small) ///
+    ) ///
+    ysize(8)
+
+
+
+*******************************************************************************
+* PEET GRAPH COMBINE
+*******************************************************************************
+
+graph combine ///
+    PEET_Carer.gph ///
+    PEET_Hours4.gph ///
+    PEET_Hours19.gph ///
+    PEET_Hours49.gph ///
+    PEET_Hours50.gph ///
+    PEET_HoursV.gph ///
+    PEET_Under1Year.gph ///
+    PEET_Under5Years.gph ///
+    PEET_Under10Years.gph ///
+    PEET_Over10Years.gph ///
+    PEET_CareAtHome.gph ///
+    PEET_CareOutsideHome.gph ///
+    PEET_CareMultipleHome.gph ///
+    PEET_GetsHelp.gph ///
+    PEET_CarerNoDisability.gph ///
+    PEET_DisabledCarer.gph, ///
+    name(Combined_PEET, replace) ///
+    title( ///
+        "SHS: Life Satisfaction, PEET and Unpaid Care", ///
+        size(medium) ///
+    ) ///
+    note( ///
+        "Orange panels indicate significant interactions; blue panels indicate non-significant interactions.", ///
+        span size(*.7) margin(small) ///
+    ) ///
+    ysize(8)
+
+
+
+*******************************************************************************
+* FLEXIBLE WORKING GRAPH COMBINE
+*
+* Carer status is intentionally omitted because CareFlexibleWork is only
+* observed for carers and therefore cannot be interacted with overall
+* carer/non-carer status.
+*******************************************************************************
+
+graph combine ///
+    CareFlexibleWork_Hours4.gph ///
+    CareFlexibleWork_Hours19.gph ///
+    CareFlexibleWork_Hours49.gph ///
+    CareFlexibleWork_Hours50.gph ///
+    CareFlexibleWork_HoursV.gph ///
+    CareFlexibleWork_Under1Year.gph ///
+    CareFlexibleWork_Under5Years.gph ///
+    CareFlexibleWork_Under10Years.gph ///
+    CareFlexibleWork_Over10Years.gph ///
+    CareFlexibleWork_CareAtHome.gph ///
+    CareFlexibleWork_CareOutsideHome.gph ///
+    CareFlexibleWork_CareMultipleHome.gph ///
+    CareFlexibleWork_GetsHelp.gph ///
+    CareFlexibleWork_CarerNoDisability.gph ///
+    CareFlexibleWork_DisabledCarer.gph, ///
+    name(Combined_CareFlexibleWork, replace) ///
+    title( ///
+        "SHS: Life Satisfaction, Flexible Working and Unpaid Care", ///
+        size(medium) ///
+    ) ///
+    note( ///
+        "Orange panels indicate significant interactions; blue panels indicate non-significant interactions.", ///
+        span size(*.7) margin(small) ///
+    ) ///
+    ysize(8)
 
 
 }
