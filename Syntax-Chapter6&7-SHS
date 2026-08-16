@@ -1,0 +1,142 @@
+	
+********************************************************************************
+
+* Chapter 6&7 Unpaid Care SHS Models
+* Outcomes:
+* PEET
+* PartTime
+* SelfEmployed
+
+********************************************************************************
+* Likelihood of ... *
+********************************************************************************
+
+local outcomes PEET PartTime SelfEmployed
+
+
+foreach outcome of local outcomes {
+
+    di "=============================================="
+    di "Running models for: `outcome'"
+    di "=============================================="
+
+    *------------------------------------------------
+    * 1. Within carer comparisons
+    *------------------------------------------------
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated Hours19 Hours49 Hours50 HoursV ///
+        [pweight=CombinedWeight] ///
+        if Hours4==1 | Hours19==1 | Hours49==1 | Hours50==1 | HoursV==1
+    
+    est store `outcome'_Hours2
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated Under5Years Under10Years Over10Years ///
+        [pweight=CombinedWeight] ///
+        if Under1Year==1 | Under5Years==1 | Under10Years==1 | Over10Years==1
+    
+    est store `outcome'_Years2
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated CareAtHome CareMultipleHome ///
+        [pweight=CombinedWeight] ///
+        if CareAtHome==1 | CareOutsideHome==1 | CareMultipleHome==1
+    
+    est store `outcome'_Location2
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated GetsHelp ///
+        [pweight=CombinedWeight] ///
+        if GetsHelp==1 | NoHelp==1
+    
+    est store `outcome'_Help2
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated DisabledCarer ///
+        [pweight=CombinedWeight] ///
+        if CarerNoDisability==1 | DisabledCarer==1
+    
+    est store `outcome'_DisC2
+
+
+    *------------------------------------------------
+    * 2. Carer vs non-carer models
+    *------------------------------------------------
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated Carer ///
+        [pweight=CombinedWeight]
+
+    est store `outcome'_Carer1
+
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated Hours4 Hours19 Hours49 Hours50 HoursV ///
+        [pweight=CombinedWeight]
+
+    est store `outcome'_Hours1
+
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated Under1Year Under5Years Under10Years Over10Years ///
+        [pweight=CombinedWeight]
+
+    est store `outcome'_Years1
+
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated CareAtHome CareOutsideHome CareMultipleHome ///
+        [pweight=CombinedWeight]
+
+    est store `outcome'_Location1
+
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated GetsHelp NoHelp ///
+        [pweight=CombinedWeight]
+
+    est store `outcome'_Help1
+
+
+
+    logit `outcome' fem AgeCat HighEducation OWhite AsianAndOther ///
+        Single Seperated CarerNoDisability DisabledCarer ///
+        [pweight=CombinedWeight]
+
+    est store `outcome'_DisC1
+
+
+    *------------------------------------------------
+    * Export model tables
+    *------------------------------------------------
+
+
+    est table `outcome'_Carer1 ///
+        `outcome'_Hours1 ///
+        `outcome'_Years1 ///
+        `outcome'_Location1 ///
+        `outcome'_Help1 ///
+        `outcome'_DisC1, ///
+        eform b(%8.4g) star stats(N ll bic r2)
+
+
+    est table `outcome'_Hours2 ///
+        `outcome'_Years2 ///
+        `outcome'_Location2 ///
+        `outcome'_Help2 ///
+        `outcome'_DisC2, ///
+        eform b(%8.4g) star stats(N ll bic r2)
+
+
+}
+
