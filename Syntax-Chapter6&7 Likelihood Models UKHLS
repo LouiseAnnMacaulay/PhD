@@ -1677,3 +1677,688 @@ coeflabels( ///
 title("UKHLS: Redundant/Sacked by Unpaid Care Characteristics", size(medium)) ///
 note("This graph plots coefficients from xtlogit models, looking at the likelihood of being made Redundant/Sacked", span size(*.7) margin(vsmall)) ///
 	caption("This graph shows the results for 5 seperate xtlogit models. All comparisons are made to people who do not provide unpaid care", span size(*.4) margin(vsmall))
+
+
+
+
+
+********************************************************************************
+* UNPAID CARE ONSET AND LABOUR MARKET PARTICIPATION
+* UKHLS
+*
+* Purpose:
+* Examine employment and PEET trajectories surrounding the first observed
+* onset of unpaid caring among respondents who entered the panel as non-carers.
+*
+* Main analyses:
+*   1. Employment at unpaid-care onset
+*   2. PEET at unpaid-care onset
+*   3. Employment exit at unpaid-care onset
+*   4. Event-time employment model
+*   5. Event-time PEET model
+*   6. Random-effects employment model
+*   7. Fixed-effects employment model
+*
+* Event-time reference:
+* One wave before first observed onset of unpaid caring.
+*
+* Note:
+* "Onset" refers to first observed transition from non-carer to unpaid carer
+* during the panel. Respondents may subsequently cease caring.
+********************************************************************************
+
+
+********************************************************************************
+* 0. PREPARATION
+********************************************************************************
+
+sort pidp wave
+
+
+********************************************************************************
+* 1. IDENTIFY FIRST OBSERVATION FOR EACH PERSON
+********************************************************************************
+
+capture drop care_first_obs
+
+bysort pidp (wave): gen care_first_obs = (_n==1)
+
+tab care_first_obs
+
+
+********************************************************************************
+* 2. IDENTIFY PEOPLE WHO WERE ALREADY CARERS AT PANEL ENTRY
+*
+* These respondents are excluded because the transition into unpaid caring
+* is not observed during the panel.
+********************************************************************************
+
+capture drop carer_at_entry
+
+bysort pidp: egen carer_at_entry = ///
+    max(care_first_obs==1 & UnpaidCarer==1)
+
+tab carer_at_entry
+
+
+********************************************************************************
+* 3. IDENTIFY FIRST OBSERVED UNPAID-CARING WAVE
+********************************************************************************
+
+capture drop first_care_wave
+
+bysort pidp (wave): egen first_care_wave = ///
+    min(cond(UnpaidCarer==1, wave, .))
+
+tab first_care_wave, missing
+
+
+********************************************************************************
+* 4. IDENTIFY UNPAID-CARE ONSET WAVE
+*
+* became_carer = 1 only in the first wave in which unpaid caring is observed.
+********************************************************************************
+
+capture drop became_carer
+
+gen became_carer = ///
+    (wave==first_care_wave) ///
+    if first_care_wave<.
+
+tab became_carer, missing
+
+
+********************************************************************************
+* 5. CREATE EVENT-TIME VARIABLE
+*
+* care_eventtime:
+*
+* -3 = three waves before first observed caring
+* -2 = two waves before
+* -1 = one wave before
+*  0 = first observed unpaid-care wave
+* +1 = one wave after
+* +2 = two waves after
+********************************************************************************
+
+capture drop care_eventtime
+
+gen care_eventtime = ///
+    wave - first_care_wave ///
+    if first_care_wave<.
+
+tab care_eventtime, missing
+
+
+********************************************************************************
+* 6. CREATE SHIFTED EVENT-PERIOD VARIABLE
+*
+* care_eventtime              care_event_period
+*
+*       -3                            0
+*       -2                            1
+*       -1                            2   <-- REFERENCE
+*        0                            3
+*       +1                            4
+*       +2                            5
+********************************************************************************
+
+capture drop care_event_period
+
+gen care_event_period = ///
+    care_eventtime + 3 ///
+    if inrange(care_eventtime,-3,2)
+
+label define care_event_period_lbl ///
+    0 "3 waves before" ///
+    1 "2 waves before" ///
+    2 "1 wave before" ///
+    3 "Unpaid care onset" ///
+    4 "1 wave after" ///
+    5 "2 waves after", replace
+
+label values care_event_period care_event_period_lbl
+
+tab care_event_period, missing
+
+
+********************************************************************************
+* 7. CREATE PREVIOUS-WAVE EMPLOYMENT
+*
+* Previous employment is defined only where observations are in consecutive
+* waves.
+********************************************************************************
+
+capture drop Care_Employed_L1
+
+bysort pidp (wave): gen Care_Employed_L1 = ///
+    Employed[_n-1] ///
+    if wave==wave[_n-1]+1
+
+tab Care_Employed_L1, missing
+
+
+********************************************************************************
+* 8. CREATE EMPLOYMENT-EXIT VARIABLE
+*
+* Care_LostEmployment = 1:
+* Employed in the immediately preceding wave and not employed in current wave.
+*
+* Care_LostEmployment = 0:
+* Employed in the immediately preceding wave and remains employed.
+********************************************************************************
+
+capture drop Care_LostEmployment
+
+gen Care_LostEmployment = ///
+    (Care_Employed_L1==1 & Employed==0) ///
+    if Care_Employed_L1==1 & Employed<.
+
+tab Care_LostEmployment, missing
+
+
+********************************************************************************
+* 9. CHECK VARIABLE CONSTRUCTION
+********************************************************************************
+
+sort pidp wave
+
+list pidp wave ///
+    UnpaidCarer ///
+    care_first_obs ///
+    carer_at_entry ///
+    first_care_wave ///
+    care_eventtime ///
+    care_event_period ///
+    became_carer ///
+    Care_Employed_L1 ///
+    Employed ///
+    Care_LostEmployment ///
+    if first_care_wave<. ///
+    & carer_at_entry==0 ///
+    in 1/150, sepby(pidp)
+
+
+********************************************************************************
+* 10. SAMPLE COUNTS
+********************************************************************************
+
+capture drop care_tag_person
+
+egen care_tag_person = tag(pidp)
+
+
+* Number of respondents who first become unpaid carers during observation,
+* having entered the panel as non-carers
+
+count if care_tag_person==1 ///
+    & first_care_wave<. ///
+    & carer_at_entry==0
+
+
+* Number of person-wave observations for this group
+
+count if first_care_wave<. ///
+    & carer_at_entry==0
+
+
+* Distribution across event-time window
+
+tab care_event_period ///
+    if first_care_wave<. ///
+    & carer_at_entry==0, ///
+    missing
+
+
+********************************************************************************
+* 11. MODEL 1
+* EMPLOYMENT BEFORE VS AT UNPAID-CARE ONSET
+********************************************************************************
+
+svy: logit Employed ///
+    became_carer ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if care_eventtime<=0 ///
+    & first_care_wave<. ///
+    & carer_at_entry==0
+
+est store CareOnset_Employed
+
+
+********************************************************************************
+* 12. MODEL 2
+* PEET BEFORE VS AT UNPAID-CARE ONSET
+********************************************************************************
+
+svy: logit PEET ///
+    became_carer ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if care_eventtime<=0 ///
+    & first_care_wave<. ///
+    & carer_at_entry==0
+
+est store CareOnset_PEET
+
+
+********************************************************************************
+* 13. MODEL 3
+* EMPLOYMENT EXIT AT UNPAID-CARE ONSET
+*
+* Among respondents employed in the immediately preceding wave, test whether
+* exit from employment is more likely in the first observed caring wave.
+********************************************************************************
+
+svy: logit Care_LostEmployment ///
+    became_carer ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if Care_Employed_L1==1 ///
+    & first_care_wave<. ///
+    & carer_at_entry==0
+
+est store CareEmploymentExit
+
+
+********************************************************************************
+* 14. MODEL 4
+* EVENT-TIME MODEL: EMPLOYMENT
+*
+* Reference:
+* care_event_period = 2 = one wave before unpaid-care onset.
+********************************************************************************
+
+svy: logit Employed ///
+    ib2.care_event_period ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if care_event_period<. ///
+    & first_care_wave<. ///
+    & carer_at_entry==0
+
+est store CareEventStudy
+
+
+********************************************************************************
+* 15. MODEL 5
+* EVENT-TIME MODEL: PEET
+********************************************************************************
+
+svy: logit PEET ///
+    ib2.care_event_period ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if care_event_period<. ///
+    & first_care_wave<. ///
+    & carer_at_entry==0
+
+est store CareEventStudy_PEET
+
+
+********************************************************************************
+* 16. MODEL 6
+* RANDOM-EFFECTS EMPLOYMENT MODEL
+********************************************************************************
+
+xtlogit Employed ///
+    became_carer ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if care_eventtime<=0 ///
+    & first_care_wave<. ///
+    & carer_at_entry==0, ///
+    re i(pidp)
+
+est store CareOnset_RE
+
+
+********************************************************************************
+* 17. MODEL 7
+* FIXED-EFFECTS EMPLOYMENT MODEL
+*
+* Time-invariant sex and ethnicity controls are excluded.
+********************************************************************************
+
+xtlogit Employed ///
+    became_carer ///
+    dvage Age2 HighEducation ///
+    Single Seperated ///
+    if care_eventtime<=0 ///
+    & first_care_wave<. ///
+    & carer_at_entry==0, ///
+    fe i(pidp)
+
+est store CareOnset_FE
+
+
+********************************************************************************
+* 18. MARGINS: SIMPLE EMPLOYMENT-ONSET MODEL
+********************************************************************************
+
+est restore CareOnset_Employed
+
+margins, at(became_carer=(0 1))
+
+
+********************************************************************************
+* 19. MARGINS: SIMPLE PEET-ONSET MODEL
+********************************************************************************
+
+est restore CareOnset_PEET
+
+margins, at(became_carer=(0 1))
+
+
+********************************************************************************
+* 20. EVENT-TIME MARGINS: EMPLOYMENT
+********************************************************************************
+
+est restore CareEventStudy
+
+margins care_event_period
+
+matrix CareEmploymentMargins = r(table)
+
+matrix list CareEmploymentMargins
+
+
+********************************************************************************
+* 21. EVENT-TIME MARGINS: PEET
+********************************************************************************
+
+est restore CareEventStudy_PEET
+
+margins care_event_period
+
+matrix CarePEETMargins = r(table)
+
+matrix list CarePEETMargins
+
+
+********************************************************************************
+* 22. FINAL THESIS FIGURE
+* PANEL A: EMPLOYMENT
+********************************************************************************
+
+est restore CareEventStudy
+
+margins care_event_period
+
+marginsplot, ///
+    recast(line) ///
+    recastci(rarea) ///
+    scheme(white_tableau) ///
+    xlabel( ///
+        0 "3 waves before" ///
+        1 "2 waves before" ///
+        2 "1 wave before" ///
+        3 "Unpaid care onset" ///
+        4 "1 wave after" ///
+        5 "2 waves after", ///
+        angle(45)) ///
+    xtitle("") ///
+    ytitle("Predicted Probability") ///
+    title("A. Employment", size(medium)) ///
+    legend(off) ///
+    xsize(7) ysize(5) ///
+    name(CareEmploymentMarginsGraph, replace)
+
+
+********************************************************************************
+* 23. FINAL THESIS FIGURE
+* PANEL B: PEET
+********************************************************************************
+
+est restore CareEventStudy_PEET
+
+margins care_event_period
+
+marginsplot, ///
+    recast(line) ///
+    recastci(rarea) ///
+    scheme(white_tableau) ///
+    xlabel( ///
+        0 "3 waves before" ///
+        1 "2 waves before" ///
+        2 "1 wave before" ///
+        3 "Unpaid care onset" ///
+        4 "1 wave after" ///
+        5 "2 waves after", ///
+        angle(45)) ///
+    xtitle("") ///
+    ytitle("Predicted Probability") ///
+    title("B. Employment, Education or Training", size(medium)) ///
+    legend(off) ///
+    xsize(7) ysize(5) ///
+    name(CarePEETMarginsGraph, replace)
+
+
+********************************************************************************
+* 24. COMBINE FINAL THESIS FIGURE
+********************************************************************************
+
+graph combine ///
+    CareEmploymentMarginsGraph ///
+    CarePEETMarginsGraph, ///
+    col(2) ///
+    title( ///
+        "Labour Market Participation Before and After Unpaid Care Onset", ///
+        span size(medium)) ///
+    xsize(14) ysize(6) ///
+    name(CareOnset_Final, replace)
+
+
+********************************************************************************
+* 25. PAIRWISE EVENT-TIME TESTS
+*
+* These compare adjacent post-onset event-time coefficients on the log-odds
+* scale.
+********************************************************************************
+
+capture log close carelincomlog
+
+log using "CareOnset_LincomTests.txt", ///
+    text replace name(carelincomlog)
+
+
+********************************************************************************
+* EMPLOYMENT: ONSET VS ONE WAVE AFTER
+********************************************************************************
+
+est restore CareEventStudy
+
+display " "
+display "EMPLOYMENT: UNPAID CARE ONSET VS 1 WAVE AFTER"
+
+lincom 3.care_event_period - 4.care_event_period
+
+
+********************************************************************************
+* EMPLOYMENT: ONE WAVE AFTER VS TWO WAVES AFTER
+********************************************************************************
+
+display " "
+display "EMPLOYMENT: 1 WAVE AFTER VS 2 WAVES AFTER"
+
+lincom 4.care_event_period - 5.care_event_period
+
+
+********************************************************************************
+* PEET: ONSET VS ONE WAVE AFTER
+********************************************************************************
+
+est restore CareEventStudy_PEET
+
+display " "
+display "PEET: UNPAID CARE ONSET VS 1 WAVE AFTER"
+
+lincom 3.care_event_period - 4.care_event_period
+
+
+********************************************************************************
+* PEET: ONE WAVE AFTER VS TWO WAVES AFTER
+********************************************************************************
+
+display " "
+display "PEET: 1 WAVE AFTER VS 2 WAVES AFTER"
+
+lincom 4.care_event_period - 5.care_event_period
+
+
+log close carelincomlog
+
+
+********************************************************************************
+* 26. GITHUB OUTPUT 1
+* MAIN UNPAID-CARE-ONSET MODELS
+********************************************************************************
+
+esttab ///
+    CareOnset_Employed ///
+    CareOnset_PEET ///
+    CareEmploymentExit ///
+    using "CareOnset_MainModels.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles( ///
+        "Employment" ///
+        "PEET" ///
+        "Employment Exit" ///
+    ) ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 27. GITHUB OUTPUT 2
+* EVENT-TIME MODELS
+********************************************************************************
+
+esttab ///
+    CareEventStudy ///
+    CareEventStudy_PEET ///
+    using "CareOnset_EventTime.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    order( ///
+        0.care_event_period ///
+        1.care_event_period ///
+        2.care_event_period ///
+        3.care_event_period ///
+        4.care_event_period ///
+        5.care_event_period ///
+    ) ///
+    coeflabels( ///
+        0.care_event_period "3 Waves Before" ///
+        1.care_event_period "2 Waves Before" ///
+        2.care_event_period "1 Wave Before (Reference)" ///
+        3.care_event_period "Unpaid Care Onset" ///
+        4.care_event_period "1 Wave After" ///
+        5.care_event_period "2 Waves After" ///
+    ) ///
+    mtitles("Employment" "PEET") ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 28. GITHUB OUTPUT 3
+* RANDOM- AND FIXED-EFFECTS MODELS
+********************************************************************************
+
+esttab ///
+    CareOnset_RE ///
+    CareOnset_FE ///
+    using "CareOnset_RE_FE.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles("Random Effects" "Fixed Effects") ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 29. DISPLAY MAIN RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    CareOnset_Employed ///
+    CareOnset_PEET ///
+    CareEmploymentExit, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles( ///
+        "Employment" ///
+        "PEET" ///
+        "Employment Exit" ///
+    ) ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 30. DISPLAY EVENT-TIME RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    CareEventStudy ///
+    CareEventStudy_PEET, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    order( ///
+        0.care_event_period ///
+        1.care_event_period ///
+        2.care_event_period ///
+        3.care_event_period ///
+        4.care_event_period ///
+        5.care_event_period ///
+    ) ///
+    coeflabels( ///
+        0.care_event_period "3 Waves Before" ///
+        1.care_event_period "2 Waves Before" ///
+        2.care_event_period "1 Wave Before (Reference)" ///
+        3.care_event_period "Unpaid Care Onset" ///
+        4.care_event_period "1 Wave After" ///
+        5.care_event_period "2 Waves After" ///
+    ) ///
+    mtitles("Employment" "PEET") ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 31. DISPLAY RANDOM- AND FIXED-EFFECTS RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    CareOnset_RE ///
+    CareOnset_FE, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles("Random Effects" "Fixed Effects") ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* END
+********************************************************************************
