@@ -4,7 +4,7 @@
 						* CHAPTER 6 & 7 xtlogit LOOP (LIKELIHOOD) *
 ********************************************************************************
 
-local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome HomeFlexi JobStress MayLoseJob MayQuitJob PublicCompany ManagerResponsibility RedundantSacked"
+local Dependent_Variables "PEET Employed PartTime TempJob ZeroHours FlexiTime WorkHome HomeFlexi JobStress MayLoseJob MayQuitJob PublicCompany RedundantSacked"
 
 ********************************************************************************
 * UC
