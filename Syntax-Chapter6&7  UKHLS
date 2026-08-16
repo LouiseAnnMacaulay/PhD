@@ -2362,3 +2362,255 @@ esttab ///
 ********************************************************************************
 * END
 ********************************************************************************
+
+
+
+********************************************************************************
+********************************************************************************
+* UKHLS: LIFE SATISFACTION, EMPLOYMENT AND UNPAID CARE
+*
+* GitHub appendix code
+*
+* Outcome:
+*   LifeSat (continuous)
+*
+* Estimator:
+*   Random-effects linear regression (xtreg, re)
+*
+* Purpose:
+*   Examine whether associations between employment characteristics and
+*   life satisfaction differ according to unpaid caring circumstances.
+********************************************************************************
+********************************************************************************
+
+
+********************************************************************************
+* 0. PANEL SETUP
+********************************************************************************
+
+xtset pidp wave
+
+
+********************************************************************************
+* 1. EMPLOYMENT VARIABLES
+********************************************************************************
+
+local employment_variables ///
+    PEET ///
+    Employed ///
+    PartTime ///
+    TempJob ///
+    ZeroHours ///
+    FlexiTime ///
+    WorkHome ///
+    JobStress ///
+    MayLoseJob ///
+    MayQuitJob ///
+    PublicCompany ///
+    ManagerResponsibility ///
+    RedundantSacked
+
+
+********************************************************************************
+* 2. SELECT EMPLOYMENT VARIABLE(S)
+*
+*
+* Run individual:
+* local run_variables "PEET"
+*
+* Run everything:
+* local run_variables "`employment_variables'"
+********************************************************************************
+
+local run_variables "PEET"
+
+
+********************************************************************************
+* 3. DEMOGRAPHIC CONTROLS
+********************************************************************************
+
+local controls ///
+    Fem ///
+    dvage ///
+    Age2 ///
+    HighEducation ///
+    White ///
+    AfricanCaribbean ///
+    Asian ///
+    Indian ///
+    Arab ///
+    Mixed ///
+    Other ///
+    Single ///
+    Seperated
+
+
+********************************************************************************
+* 4. GRAPH SWITCH
+*
+* 1 = create margins plots
+* 0 = estimate models/tests/margins only
+********************************************************************************
+
+local makegraphs 1
+
+
+********************************************************************************
+********************************************************************************
+* HELPER PROGRAM
+*
+* Uses the currently restored regression model to:
+*   - test the focal interaction
+*   - calculate adjusted predictions
+*   - create the margins plot
+*
+********************************************************************************
+********************************************************************************
+
+capture program drop CareLifeSatPlot
+
+program define CareLifeSatPlot
+
+    args employment carevar suffix graphtitle modelname makegraphs
+
+    * Restore the appropriate regression
+    estimates restore `modelname'
+
+
+    *--------------------------------------------------------------------------
+    * Test employment × care interaction
+    *--------------------------------------------------------------------------
+
+    testparm i.`employment'#i.`carevar'
+
+    local pval = r(p)
+
+    display _newline
+    display "`employment' × `carevar' interaction:"
+    display "p = " %6.4f `pval'
+
+
+    *--------------------------------------------------------------------------
+    * Adjusted predicted Life Satisfaction
+    *--------------------------------------------------------------------------
+
+    margins, ///
+        at( ///
+            `employment'=(0 1) ///
+            `carevar'=(0 1) ///
+        ) ///
+        level(95)
+
+
+    *--------------------------------------------------------------------------
+    * Graph
+    *--------------------------------------------------------------------------
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 {
+
+            marginsplot, ///
+                xdimension(`employment') ///
+                plotdimension(`carevar') ///
+                scheme(Rainbow) ///
+                plot1opts( ///
+                    lwidth(medium) ///
+                    lcolor(orange_red) ///
+                    lpattern(solid) ///
+                ) ///
+                plot2opts( ///
+                    lwidth(medium) ///
+                    lcolor(dkorange) ///
+                    lpattern(dash) ///
+                ) ///
+                recastci(rarea) ///
+                ciopts(fcolor(%40)) ///
+                title("`graphtitle'") ///
+                xsize(5) ///
+                ysize(5) ///
+                xlabel( ///
+                    0 "`employment' = 0" ///
+                    1 "`employment' = 1", ///
+                    labsize(vsmall) ///
+                ) ///
+                xscale(range(-0.15 1.15)) ///
+                ylabel(, glcolor(gs15) glpattern(solid)) ///
+                ytitle("Life Satisfaction") ///
+                xtitle("") ///
+                legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                graphregion(margin(l+5 r+5)) ///
+                saving(`employment'_`suffix'.gph, replace)
+
+        }
+
+        else {
+
+            marginsplot, ///
+                xdimension(`employment') ///
+                plotdimension(`carevar') ///
+                scheme(tab2) ///
+                plot1opts( ///
+                    lwidth(medium) ///
+                    lcolor(navy) ///
+                    lpattern(solid) ///
+                ) ///
+                plot2opts( ///
+                    lwidth(medium) ///
+                    lcolor(edkblue) ///
+                    lpattern(dash) ///
+                ) ///
+                recastci(rarea) ///
+                ciopts(fcolor(%40)) ///
+                title("`graphtitle'") ///
+                xsize(5) ///
+                ysize(5) ///
+                xlabel( ///
+                    0 "`employment' = 0" ///
+                    1 "`employment' = 1", ///
+                    labsize(vsmall) ///
+                ) ///
+                xscale(range(-0.15 1.15)) ///
+                ylabel(, glcolor(gs15) glpattern(solid)) ///
+                ytitle("Life Satisfaction") ///
+                xtitle("") ///
+                legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                graphregion(margin(l+5 r+5)) ///
+                saving(`employment'_`suffix'.gph, replace)
+
+        }
+    }
+
+end
+
+
+
+********************************************************************************
+********************************************************************************
+* MAIN PROGRAM
+********************************************************************************
+********************************************************************************
+
+capture program drop CarerLifeSat
+
+program define CarerLifeSat
+
+    args employment makegraphs
+
+    display _newline
+    display "============================================================"
+    display "LIFE SATISFACTION AND `employment'"
+    display "============================================================"
+
+
+    ****************************************************************************
+    * MODEL 1
+    * UNPAID CARER STATUS
+    ****************************************************************************
+
+    xtreg LifeSat ///
+        $controls_placeholder ///
+        i.`employment'##i.UnpaidCarer, ///
+        re
+
+end
