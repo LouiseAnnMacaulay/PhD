@@ -1,0 +1,606 @@
+********************************************************************************
+* SHS: EMPLOYMENT OUTCOMES AND HEALTH
+*
+* Outcomes:
+*   1. PEET
+*   2. Part-time employment
+*   3. Self-employment
+*
+* HasHC and HasHC2 represent the same underlying measure.
+* HasHC2 is used for the standalone "any health condition" model so that its
+* coefficient can be distinguished from HasHC in coefplot.
+********************************************************************************
+
+
+*------------------------------------------------------------------------------
+* MODEL SPECIFICATION
+*------------------------------------------------------------------------------
+
+* Common control variables
+local controls ///
+    fem age Age2 HighEducation ///
+    BWhite OWhite AsianAndOther ///
+    Single Seperated
+
+* Employment outcomes
+local outcomes ///
+    PEET ///
+    PartTime ///
+    SelfEmployed
+
+* Short names used for storing estimates
+local outnames ///
+    PEET ///
+    PT ///
+    SE
+
+* Specific health conditions
+local conditions ///
+    Cancer ///
+    MetabolicCondition ///
+    MentalIllness ///
+    LearningDifficulty ///
+    Epilepsy ///
+    MigraneNerves ///
+    EyeEar ///
+    HeartCirculation ///
+    Breathing ///
+    Digestive ///
+    BoneArthritis ///
+    Blood ///
+    Skin ///
+    Back
+
+* Short names for stored estimates
+local connames ///
+    Cancer ///
+    Metabolic ///
+    MentalHealth ///
+    LearningD ///
+    Epilepsy ///
+    Migraine ///
+    EyeEar ///
+    Heart ///
+    Lung ///
+    Digestive ///
+    Arthritis ///
+    Blood ///
+    Skin ///
+    Back
+
+
+********************************************************************************
+* LOOP OVER EMPLOYMENT OUTCOMES
+********************************************************************************
+
+local nout : word count `outcomes'
+
+forvalues o = 1/`nout' {
+
+    local outcome : word `o' of `outcomes'
+    local outname : word `o' of `outnames'
+
+    display _newline
+    display "============================================================"
+    display "SHS OUTCOME: `outcome'"
+    display "============================================================"
+
+
+    *--------------------------------------------------------------------------
+    * Disability
+    *--------------------------------------------------------------------------
+
+    logistic `outcome' ///
+        `controls' ///
+        Disabled ///
+        [pweight=CombinedWeight]
+
+    estimates store `outname'_Disabled
+
+
+    *--------------------------------------------------------------------------
+    * Any health condition
+    *--------------------------------------------------------------------------
+
+    logistic `outcome' ///
+        `controls' ///
+        HasHC2 ///
+        [pweight=CombinedWeight]
+
+    estimates store `outname'_HasHC
+
+
+    *--------------------------------------------------------------------------
+    * Fair/poor self-rated health
+    *--------------------------------------------------------------------------
+
+    logistic `outcome' ///
+        `controls' ///
+        FairPoorHealth ///
+        [pweight=CombinedWeight]
+
+    estimates store `outname'_PoorHealth
+
+
+    *--------------------------------------------------------------------------
+    * Individual health conditions
+    *
+    * Each condition model additionally controls for having any health
+    * condition (HasHC), matching the original thesis specification.
+    *--------------------------------------------------------------------------
+
+    local ncond : word count `conditions'
+
+    forvalues c = 1/`ncond' {
+
+        local condition : word `c' of `conditions'
+        local conname   : word `c' of `connames'
+
+        logistic `outcome' ///
+            `controls' ///
+            `condition' ///
+            HasHC ///
+            [pweight=CombinedWeight]
+
+        estimates store `outname'_`conname'
+    }
+
+
+    *--------------------------------------------------------------------------
+    * RESULTS TABLE
+    *--------------------------------------------------------------------------
+
+    estimates table ///
+        `outname'_Disabled ///
+        `outname'_HasHC ///
+        `outname'_PoorHealth ///
+        `outname'_Lung ///
+        `outname'_Heart ///
+        `outname'_Arthritis ///
+        `outname'_MentalHealth ///
+        `outname'_Epilepsy ///
+        `outname'_LearningD ///
+        `outname'_Metabolic ///
+        `outname'_Cancer ///
+        `outname'_Migraine ///
+        `outname'_Back ///
+        `outname'_EyeEar ///
+        `outname'_Digestive ///
+        `outname'_Blood ///
+        `outname'_Skin, ///
+        eform b(%8.4g) star stats(N ll bic r2)
+
+
+    *--------------------------------------------------------------------------
+    * COEFFICIENT PLOT
+    *--------------------------------------------------------------------------
+
+    coefplot ///
+        (`outname'_Disabled,     label("Disabled")) ///
+        (`outname'_HasHC,        label("Health Condition")) ///
+        (`outname'_PoorHealth,   label("Poor Health")) ///
+        (`outname'_Arthritis,    label("Arthritis")) ///
+        (`outname'_MentalHealth, label("Mental Health")) ///
+        (`outname'_Epilepsy,     label("Epilepsy")) ///
+        (`outname'_LearningD,    label("Learning Disability")) ///
+        (`outname'_Metabolic,    label("Metabolic")) ///
+        (`outname'_Back,         label("Back")) ///
+        (`outname'_Lung,         label("Lung")) ///
+        (`outname'_Heart,        label("Heart")) ///
+        (`outname'_Cancer,       label("Cancer")) ///
+        (`outname'_Migraine,     label("Migraine")) ///
+        (`outname'_EyeEar,       label("Hearing / Sight")) ///
+        (`outname'_Digestive,    label("Digestive")) ///
+        (`outname'_Blood,        label("Blood")) ///
+        (`outname'_Skin,         label("Skin")), ///
+        drop(_cons) ///
+        eform ///
+        keep( ///
+            Disabled ///
+            FairPoorHealth ///
+            HasHC2 ///
+            Cancer ///
+            MetabolicCondition ///
+            MentalIllness ///
+            LearningDifficulty ///
+            Epilepsy ///
+            MigraneNerves ///
+            EyeEar ///
+            HeartCirculation ///
+            Breathing ///
+            Digestive ///
+            BoneArthritis ///
+            Blood ///
+            Skin ///
+            Back ///
+        ) ///
+        coeflabels( ///
+            HasHC2              = "Health Condition" ///
+            FairPoorHealth      = "Poor Health" ///
+            Cancer              = "Cancer" ///
+            MetabolicCondition  = "Metabolic Condition" ///
+            MentalIllness       = "Mental Health" ///
+            LearningDifficulty  = "Learning Disability" ///
+            Epilepsy            = "Epilepsy" ///
+            MigraneNerves       = "Migraine" ///
+            EyeEar              = "Hearing / Sight" ///
+            HeartCirculation    = "Heart" ///
+            Breathing           = "Lung" ///
+            Digestive           = "Digestive" ///
+            BoneArthritis       = "Arthritis" ///
+            Blood               = "Blood" ///
+            Skin                = "Skin" ///
+            Back                = "Back" ///
+        ) ///
+        scheme(white_tableau) ///
+        legend(off) ///
+        aspect(0) ///
+        graphregion(fcolor(white)) ///
+        xlabel(, notick) ///
+        grid(between glpattern(dash) glwidth(*0.5) glcolor(gray%20)) ///
+        ylabel(, labsize(vsmall) notick) ///
+        xline(1, lcolor(black) lwidth(medium)) ///
+        msize(vsmall) ///
+        msymbol(D) ///
+        clwidth(vthin) ///
+        mlabposition(2) ///
+        mlabgap(-.5) ///
+        mlabsize(small) ///
+        title("SHS: Likelihood of `outcome' by Health", ///
+            span size(*.8) linegap(1.5) margin(medium)) ///
+        name(SHS_`outname'_Health, replace)
+
+}
+
+
+
+
+
+********************************************************************************
+* SHS: LIFE SATISFACTION, PEET AND HEALTH
+********************************************************************************
+
+
+*------------------------------------------------------------------------------
+* VARIABLES
+*------------------------------------------------------------------------------
+
+local LifeSat_conditions ///
+    Cancer ///
+    MetabolicCondition ///
+    MentalIllness ///
+    LearningDifficulty ///
+    Epilepsy ///
+    MigraneNerves ///
+    EyeEar ///
+    HeartCirculation ///
+    Breathing ///
+    Digestive ///
+    BoneArthritis ///
+    Blood ///
+    Skin ///
+    Back
+
+* Broader health measures are estimated separately because they should not
+* additionally control for HasHC.
+local LifeSat_general ///
+    Disabled ///
+    FairPoorHealth ///
+    HasHC
+
+
+********************************************************************************
+* PROGRAM
+********************************************************************************
+
+capture program drop SHSLifeSatPEET
+
+program define SHSLifeSatPEET
+
+    args var type
+
+    display _newline
+    display "============================================================"
+    display "Life satisfaction model: `var'"
+    display "============================================================"
+
+
+    *--------------------------------------------------------------------------
+    * Individual health condition
+    *
+    * Includes PEET × HasHC and PEET × specific condition.
+    *--------------------------------------------------------------------------
+
+    if "`type'" == "condition" {
+
+        regress LifeSat ///
+            fem age Age2 HighEducation ///
+            OWhite AsianAndOther ///
+            Single Seperated ///
+            i.PEET##i.HasHC ///
+            i.PEET##i.`var' ///
+            [pweight=CombinedWeight]
+
+    }
+
+
+    *--------------------------------------------------------------------------
+    * General health measure
+    *
+    * Disabled, FairPoorHealth or HasHC is interacted directly with PEET.
+    *--------------------------------------------------------------------------
+
+    else if "`type'" == "general" {
+
+        regress LifeSat ///
+            fem age Age2 HighEducation ///
+            OWhite AsianAndOther ///
+            Single Seperated ///
+            i.PEET##i.`var' ///
+            [pweight=CombinedWeight]
+
+    }
+
+
+    *--------------------------------------------------------------------------
+    * Store regression
+    *--------------------------------------------------------------------------
+
+    estimates store LS_`var'
+
+
+    *--------------------------------------------------------------------------
+    * Test PEET × health interaction
+    *--------------------------------------------------------------------------
+
+    testparm i.PEET#i.`var'
+
+    local pval = r(p)
+
+    display "Interaction p-value = " %6.4f `pval'
+
+
+    *--------------------------------------------------------------------------
+    * Marginal predictions
+    *--------------------------------------------------------------------------
+
+    margins, ///
+        at(PEET=(0 1) `var'=(0 1)) ///
+        level(95)
+
+
+    *--------------------------------------------------------------------------
+    * Plot
+    *
+    * Rainbow = statistically significant interaction
+    * tab2    = non-significant interaction
+    *--------------------------------------------------------------------------
+
+    if `pval' < 0.05 {
+
+        marginsplot, ///
+            scheme(Rainbow) ///
+            plotopts( ///
+                lwidth(medthick) ///
+                lcolor(%70) ///
+                msize(medium) ///
+                mlcolor(yellow) ///
+                mcolor(%75) ///
+            ) ///
+            recastci(rarea) ///
+            ciopts(fcolor(%40)) ///
+            title("`var'", size(medium)) ///
+            xsize(5) ///
+            ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(`var'_PEET.gph, replace)
+
+    }
+
+    else {
+
+        marginsplot, ///
+            scheme(tab2) ///
+            plotopts( ///
+                lwidth(medthick) ///
+                lcolor(%70) ///
+                msize(medium) ///
+                mlcolor(yellow) ///
+                mcolor(%75) ///
+            ) ///
+            recastci(rarea) ///
+            ciopts(fcolor(%40)) ///
+            title("`var'", size(medium)) ///
+            xsize(5) ///
+            ysize(5) ///
+            xlab(, glcolor(gs15) glpattern(solid)) ///
+            ylab(, glcolor(gs15) glpattern(solid)) ///
+            ytitle("Life Satisfaction") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(`var'_PEET.gph, replace)
+
+    }
+
+end
+
+
+********************************************************************************
+* RUN INDIVIDUAL HEALTH CONDITION MODELS
+********************************************************************************
+
+foreach var of local LifeSat_conditions {
+
+    SHSLifeSatPEET `var' condition
+
+}
+
+
+********************************************************************************
+* RUN GENERAL HEALTH MODELS
+********************************************************************************
+
+foreach var of local LifeSat_general {
+
+    SHSLifeSatPEET `var' general
+
+}
+
+********************************************************************************
+* COMBINE LIFE SATISFACTION GRAPHS
+********************************************************************************
+
+graph combine ///
+    Cancer_PEET.gph ///
+    MetabolicCondition_PEET.gph ///
+    MentalIllness_PEET.gph ///
+    LearningDifficulty_PEET.gph ///
+    Epilepsy_PEET.gph ///
+    MigraneNerves_PEET.gph ///
+    EyeEar_PEET.gph ///
+    HeartCirculation_PEET.gph ///
+    Breathing_PEET.gph ///
+    Digestive_PEET.gph ///
+    BoneArthritis_PEET.gph ///
+    Blood_PEET.gph ///
+    Skin_PEET.gph ///
+    Back_PEET.gph ///
+    Disabled_PEET.gph ///
+    FairPoorHealth_PEET.gph ///
+    HasHC_PEET.gph, ///
+    name(combined_PEETSAT, replace) ///
+    title( ///
+        "SHS: Life Satisfaction, Health and PEET", ///
+        size(medium) ///
+    ) ///
+    note( ///
+        "Adjusted margins from 17 separate regression models using SHS.", ///
+        span size(*.5) margin(vsmall) ///
+    ) ///
+    caption( ///
+        "Orange graphs indicate statistically significant PEET × health interactions; blue graphs indicate non-significant interactions.", ///
+        span size(*.4) margin(vsmall) ///
+    ) ///
+    xsize(6) ///
+    ysize(8)
+
+
+
+********************************************************************************
+* SHS: LIFE SATISFACTION, PEET AND NUMBER OF HEALTH CONDITIONS
+********************************************************************************
+
+
+*------------------------------------------------------------------------------
+* Regression
+*------------------------------------------------------------------------------
+
+regress LifeSat ///
+    fem age Age2 HighEducation ///
+    OWhite AsianAndOther ///
+    Single Seperated ///
+    i.PEET##c.NumHealthConditions ///
+    [pweight=CombinedWeight]
+
+estimates store LS_NumHealthConditions
+
+
+*------------------------------------------------------------------------------
+* Test PEET × number of health conditions interaction
+*------------------------------------------------------------------------------
+
+testparm i.PEET#c.NumHealthConditions
+
+local pval = r(p)
+
+display "PEET × number of health conditions interaction p-value = " ///
+    %6.4f `pval'
+
+
+*------------------------------------------------------------------------------
+* Adjusted predicted life satisfaction
+*------------------------------------------------------------------------------
+
+margins, ///
+    at( ///
+        PEET=(0 1) ///
+        NumHealthConditions=(0 1 2 3 4 5 6) ///
+    ) ///
+    level(95)
+
+
+*------------------------------------------------------------------------------
+* Margins plot
+*------------------------------------------------------------------------------
+
+if `pval' < 0.05 {
+
+    marginsplot, ///
+        scheme(Rainbow) ///
+        plotopts( ///
+            lwidth(medthick) ///
+            lcolor(%70) ///
+            msize(medium) ///
+            mlcolor(yellow) ///
+            mcolor(%75) ///
+        ) ///
+        recastci(rarea) ///
+        ciopts(fcolor(%40)) ///
+        title( ///
+            "SHS: Number of Health Conditions", ///
+            size(medium) ///
+        ) ///
+        xsize(5) ///
+        ysize(5) ///
+        xlab(, glcolor(gs15) glpattern(solid)) ///
+        ylab(, glcolor(gs15) glpattern(solid)) ///
+        ytitle("Life Satisfaction") ///
+        legend( ///
+            order(1 "NEET" 2 "PEET") ///
+            pos(6) ring(2) col(2) ///
+            size(vsmall) ///
+        ) ///
+        note( ///
+            "Adjusted predicted life satisfaction with 95% confidence intervals.", ///
+            span size(*.6) margin(vsmall) ///
+        ) ///
+        saving(NumHealthConditions_PEET.gph, replace)
+
+}
+
+else {
+
+    marginsplot, ///
+        scheme(tab2) ///
+        plotopts( ///
+            lwidth(medthick) ///
+            lcolor(%70) ///
+            msize(medium) ///
+            mlcolor(yellow) ///
+            mcolor(%75) ///
+        ) ///
+        recastci(rarea) ///
+        ciopts(fcolor(%40)) ///
+        title( ///
+            "SHS: Number of Health Conditions", ///
+            size(medium) ///
+        ) ///
+        xsize(5) ///
+        ysize(5) ///
+        xlab(, glcolor(gs15) glpattern(solid)) ///
+        ylab(, glcolor(gs15) glpattern(solid)) ///
+        ytitle("Life Satisfaction") ///
+        legend( ///
+            order(1 "NEET" 2 "PEET") ///
+            pos(6) ring(2) col(2) ///
+            size(vsmall) ///
+        ) ///
+        note( ///
+            "Adjusted predicted life satisfaction with 95% confidence intervals.", ///
+            span size(*.6) margin(vsmall) ///
+        ) ///
+        saving(NumHealthConditions_PEET.gph, replace)
+
+}
