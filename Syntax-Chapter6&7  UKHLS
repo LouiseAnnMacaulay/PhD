@@ -2614,3 +2614,207 @@ program define CarerLifeSat
         re
 
 end
+
+
+
+
+********************************************************************************
+********************************************************************************
+* OCCUPATION AND UNPAID CARE
+* UKHLS
+*
+* Survey-weighted multinomial logistic regression
+*
+* Outcome:
+*   OccupationClassification
+*
+* Reference occupation:
+*   Category 4 = Retail / Hospitality
+*
+* Comparisons:
+*   Unpaid carers and specific caring groups compared with non-carers.
+********************************************************************************
+********************************************************************************
+
+
+********************************************************************************
+* 1. ANALYSIS SAMPLE
+********************************************************************************
+
+capture drop OccupationSample
+
+gen OccupationSample = ///
+    Employed==1 ///
+    & OccupationClassification < . ///
+    & Fem < . ///
+    & dvage < . ///
+    & Age2 < . ///
+    & HighEducation < . ///
+    & Single < . ///
+    & Seperated < . ///
+    & WhiteOther < . ///
+    & OtherEthnicity < . ///
+    & UnpaidCarer < .
+
+
+********************************************************************************
+* 2. REFERENCE OCCUPATION
+*
+* Category 4 = Retail / Hospitality
+********************************************************************************
+
+fvset base 4 OccupationClassification
+
+
+********************************************************************************
+* 3. UNPAID CARER STATUS
+*
+* Reference = non-carer
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.UnpaidCarer ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_UnpaidCarer
+
+
+********************************************************************************
+* 4. LOCATION OF CARE
+*
+* Reference = non-carer, assuming all location indicators equal zero
+* for respondents who do not provide unpaid care.
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.HouseholdCarer ///
+    i.NonResidentCarer ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_Location
+
+
+********************************************************************************
+* 5. NUMBER OF PEOPLE CARED FOR
+*
+* Reference = non-carer
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.Care1 ///
+    i.Care2 ///
+    i.Care3or4 ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_NumberCare
+
+
+********************************************************************************
+* 6. HOURS OF UNPAID CARE
+*
+* Reference = non-carer
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.Under10 ///
+    i.Under19 ///
+    i.Over20 ///
+    i.Over50 ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_Hours
+
+
+********************************************************************************
+* 7. DISABILITY AND CARING STATUS
+*
+* Reference = non-carer
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.DisabledCarer ///
+    i.NoDCarer ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_CarerDisability
+
+
+********************************************************************************
+* 8. CHECK STORED MODELS
+********************************************************************************
+
+estimates dir
+
+
+********************************************************************************
+* 9. COMBINED RESULTS TABLE
+********************************************************************************
+
+estimates table ///
+    Occupation_UnpaidCarer ///
+    Occupation_Location ///
+    Occupation_NumberCare ///
+    Occupation_Hours ///
+    Occupation_CarerDisability, ///
+    eform ///
+    b(%8.3f) ///
+    star ///
+    stats(N)
+
+
+********************************************************************************
+* 10. SAMPLE SIZE CHECK
+********************************************************************************
+
+tab OccupationClassification ///
+    if OccupationSample==1
+
+
+********************************************************************************
+* END
+********************************************************************************
