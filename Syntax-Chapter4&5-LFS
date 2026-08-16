@@ -250,6 +250,123 @@ estimates table ///
     b(%8.4g) star stats(N ll bic r2)
 
 
+
+********************************************************************************
+* JOB-CAUSED HEALTH CONDITION AND EMPLOYMENT SECTOR
+*
+* Outcome: Job Caused Health Condition
+* Tests interactions between public-sector employment and health/disability.
+********************************************************************************
+
+
+*------------------------------------------------------------------------------
+* Model specification
+*------------------------------------------------------------------------------
+
+* Controls used in the original JobCausedHC analysis
+local JCHC_controls ///
+    Fem AGE Age2 HighEducation ///
+    Seperated Single ///
+    Asian Indian Pakistani Black OtherE
+
+* Individual health conditions
+local JCHC_conditions ///
+    AMentalHealth ///
+    ALegsFeet ///
+    AHearingSight ///
+    ASkinAllergies ///
+    ABreathing ///
+    AHeart ///
+    ALiverKidneyDigestion ///
+    ADiabetes ///
+    ALearningDifficulty ///
+    AProgressive ///
+    AEpilepsy ///
+    AArmsHands2
+
+* Short names for stored estimates
+local JCHC_names ///
+    MentalHealth ///
+    LegsFeet ///
+    HearingSight ///
+    SkinAllergies ///
+    Breathing ///
+    Heart ///
+    Liver ///
+    Diabetes ///
+    LearningDisability ///
+    ProgressiveCondition ///
+    Epilepsy ///
+    ArmsHands
+
+
+********************************************************************************
+* 1. DISABILITY × PUBLIC SECTOR
+********************************************************************************
+
+logistic JobCausedHC ///
+    `JCHC_controls' ///
+    i.PublicSector##i.Disabled ///
+    [pweight=PWT18]
+
+estimates store JCHC_Disabled
+
+
+********************************************************************************
+* 2. ANY HEALTH CONDITION × PUBLIC SECTOR
+********************************************************************************
+
+logistic JobCausedHC ///
+    `JCHC_controls' ///
+    i.PublicSector##i.HasHealthC2 ///
+    [pweight=PWT18]
+
+estimates store JCHC_HealthCondition
+
+
+********************************************************************************
+* 3. INDIVIDUAL HEALTH CONDITION × PUBLIC SECTOR
+********************************************************************************
+
+local nJCHC : word count `JCHC_conditions'
+
+forvalues c = 1/`nJCHC' {
+
+    local condition : word `c' of `JCHC_conditions'
+    local cname     : word `c' of `JCHC_names'
+
+    logistic JobCausedHC ///
+        `JCHC_controls' ///
+        i.PublicSector##i.`condition' ///
+        HasHealthC ///
+        [pweight=PWT18]
+
+    estimates store JCHC_`cname'
+}
+
+
+********************************************************************************
+* 4. DISPLAY ALL MODELS
+********************************************************************************
+
+estimates table ///
+    JCHC_Disabled ///
+    JCHC_HealthCondition ///
+    JCHC_MentalHealth ///
+    JCHC_Epilepsy ///
+    JCHC_LearningDisability ///
+    JCHC_LegsFeet ///
+    JCHC_HearingSight ///
+    JCHC_ArmsHands ///
+    JCHC_SkinAllergies ///
+    JCHC_ProgressiveCondition ///
+    JCHC_Diabetes ///
+    JCHC_Liver ///
+    JCHC_Heart ///
+    JCHC_Breathing, ///
+    b(%8.4g) star stats(N ll bic r2)
+
+
 ********************************************************************************
 * END
 ********************************************************************************
