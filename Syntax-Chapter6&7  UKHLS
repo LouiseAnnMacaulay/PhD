@@ -2818,3 +2818,488 @@ tab OccupationClassification ///
 ********************************************************************************
 * END
 ********************************************************************************
+
+
+
+********************************************************************************
+********************************************************************************
+* UKHLS: LIFE SATISFACTION, EMPLOYMENT AND UNPAID CARE
+*
+* Outcome:
+*   LifeSat
+*
+* Estimator:
+*   Random-effects linear regression
+*
+* Panel:
+*   pidp
+********************************************************************************
+********************************************************************************
+
+
+********************************************************************************
+* 0. PANEL SETUP
+********************************************************************************
+
+xtset pidp wave
+
+
+********************************************************************************
+* 1. EMPLOYMENT VARIABLES
+********************************************************************************
+
+local EmploymentVars ///
+    PEET ///
+    Employed ///
+    PartTime ///
+    TempJob ///
+    ZeroHours ///
+    FlexiTime ///
+    WorkHome ///
+    JobStress ///
+    MayLoseJob ///
+    MayQuitJob ///
+    PublicCompany ///
+    ManagerResponsibility ///
+    RedundantSacked
+
+
+********************************************************************************
+* 2. SELECT VARIABLES TO RUN
+*
+* Change this if you only want one or a few outcomes.
+*
+* Examples:
+*
+* local RunVars "PEET"
+* local RunVars "PartTime WorkHome"
+*
+* Run everything:
+* local RunVars "`EmploymentVars'"
+********************************************************************************
+
+local RunVars "`EmploymentVars'"
+
+
+********************************************************************************
+* 3. CONTROLS
+********************************************************************************
+
+global LSControls ///
+    Fem ///
+    dvage ///
+    Age2 ///
+    HighEducation ///
+    White ///
+    AfricanCaribbean ///
+    Asian ///
+    Indian ///
+    Arab ///
+    Mixed ///
+    Other ///
+    Single ///
+    Seperated
+
+
+********************************************************************************
+* 4. GRAPH SWITCH
+*
+* 1 = make margins plots
+* 0 = models, tests and margins only
+********************************************************************************
+
+local makegraphs 1
+
+
+********************************************************************************
+********************************************************************************
+* 5. HELPER PROGRAM
+*
+* Restores an already-estimated model, tests one interaction,
+* calculates margins, and creates the appropriate graph.
+********************************************************************************
+********************************************************************************
+
+capture program drop CareInteractionPlot
+
+program define CareInteractionPlot
+
+    args emp care suffix graphtitle modelname makegraphs
+
+
+    **************************************************************************
+    * Restore model
+    **************************************************************************
+
+    estimates restore `modelname'
+
+
+    **************************************************************************
+    * Test interaction
+    **************************************************************************
+
+    capture testparm i.`emp'#i.`care'
+
+    if _rc != 0 {
+
+        display "Skipping `emp' × `care': interaction not estimable"
+
+        exit
+    }
+
+    local pval = r(p)
+
+    display _newline
+    display "`emp' × `care': p = " %6.4f `pval'
+
+
+    **************************************************************************
+    * Margins
+    **************************************************************************
+
+    margins, ///
+        at( ///
+            `emp'=(0 1) ///
+            `care'=(0 1) ///
+        ) ///
+        level(95)
+
+
+    **************************************************************************
+    * Graph
+    **************************************************************************
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 {
+
+            marginsplot, ///
+                xdimension(`emp') ///
+                plotdimension(`care') ///
+                scheme(Rainbow) ///
+                plot1opts( ///
+                    lwidth(medium) ///
+                    lcolor(orange_red) ///
+                    lpattern(solid) ///
+                ) ///
+                plot2opts( ///
+                    lwidth(medium) ///
+                    lcolor(dkorange) ///
+                    lpattern(dash) ///
+                ) ///
+                recastci(rarea) ///
+                ciopts(fcolor(%40)) ///
+                title("`graphtitle'") ///
+                xsize(5) ///
+                ysize(5) ///
+                xlabel( ///
+                    0 "`emp' = 0" ///
+                    1 "`emp' = 1", ///
+                    labsize(vsmall) ///
+                ) ///
+                xscale(range(-0.15 1.15)) ///
+                ylab(, glcolor(gs15) glpattern(solid)) ///
+                ytitle("Life Satisfaction") ///
+                xtitle("") ///
+                legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                graphregion(margin(l+5 r+5)) ///
+                saving(`emp'_`suffix'.gph, replace)
+
+        }
+
+        else {
+
+            marginsplot, ///
+                xdimension(`emp') ///
+                plotdimension(`care') ///
+                scheme(tab2) ///
+                plot1opts( ///
+                    lwidth(medium) ///
+                    lcolor(navy) ///
+                    lpattern(solid) ///
+                ) ///
+                plot2opts( ///
+                    lwidth(medium) ///
+                    lcolor(edkblue) ///
+                    lpattern(dash) ///
+                ) ///
+                recastci(rarea) ///
+                ciopts(fcolor(%40)) ///
+                title("`graphtitle'") ///
+                xsize(5) ///
+                ysize(5) ///
+                xlabel( ///
+                    0 "`emp' = 0" ///
+                    1 "`emp' = 1", ///
+                    labsize(vsmall) ///
+                ) ///
+                xscale(range(-0.15 1.15)) ///
+                ylab(, glcolor(gs15) glpattern(solid)) ///
+                ytitle("Life Satisfaction") ///
+                xtitle("") ///
+                legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                graphregion(margin(l+5 r+5)) ///
+                saving(`emp'_`suffix'.gph, replace)
+
+        }
+    }
+
+end
+
+
+********************************************************************************
+********************************************************************************
+* 6. MAIN PROGRAM
+********************************************************************************
+********************************************************************************
+
+capture program drop UnpaidCareLifeSat
+
+program define UnpaidCareLifeSat
+
+    args emp makegraphs
+
+
+    display _newline
+    display "============================================================"
+    display "LIFE SATISFACTION, UNPAID CARE AND `emp'"
+    display "============================================================"
+
+
+    ********************************************************************************
+    * MODEL 1
+    * UNPAID CARER STATUS
+    ********************************************************************************
+
+    xtreg LifeSat ///
+        $LSControls ///
+        i.UnpaidCarer##i.`emp', ///
+        re i(pidp)
+
+    estimates store LS_UC
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        UnpaidCarer ///
+        UnpaidCarer ///
+        "Unpaid Carer" ///
+        LS_UC ///
+        `makegraphs'
+
+
+    ********************************************************************************
+    * MODEL 2
+    * LOCATION OF CARE
+    *
+    * Household and non-resident caring are included in the same regression.
+    ********************************************************************************
+
+    xtreg LifeSat ///
+        $LSControls ///
+        i.`emp'##i.HouseholdCarer ///
+        i.`emp'##i.NonResidentCarer, ///
+        re i(pidp)
+
+    estimates store LS_Location
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        HouseholdCarer ///
+        HouseholdCarer ///
+        "Cares at Home" ///
+        LS_Location ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        NonResidentCarer ///
+        NonResidentCarer ///
+        "Non-Resident Care" ///
+        LS_Location ///
+        `makegraphs'
+
+
+    ********************************************************************************
+    * MODEL 3
+    * NUMBER OF PEOPLE CARED FOR
+    ********************************************************************************
+
+    xtreg LifeSat ///
+        $LSControls ///
+        i.`emp'##i.Care1 ///
+        i.`emp'##i.Care2 ///
+        i.`emp'##i.Care3or4, ///
+        re i(pidp)
+
+    estimates store LS_NumberCare
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Care1 ///
+        Care1 ///
+        "Care for 1 Person" ///
+        LS_NumberCare ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Care2 ///
+        Care2 ///
+        "Care for 2 People" ///
+        LS_NumberCare ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Care3or4 ///
+        Care3 ///
+        "Care for 3+ People" ///
+        LS_NumberCare ///
+        `makegraphs'
+
+
+    ********************************************************************************
+    * MODEL 4
+    * HOURS OF UNPAID CARE
+    ********************************************************************************
+
+    xtreg LifeSat ///
+        $LSControls ///
+        i.`emp'##i.Under10 ///
+        i.`emp'##i.Under19 ///
+        i.`emp'##i.Over20 ///
+        i.`emp'##i.Over50, ///
+        re i(pidp)
+
+    estimates store LS_Hours
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Under10 ///
+        Under10 ///
+        "Under 10 Hours" ///
+        LS_Hours ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Under19 ///
+        Under19 ///
+        "10-19 Hours" ///
+        LS_Hours ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Over20 ///
+        Over20 ///
+        "20-49 Hours" ///
+        LS_Hours ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        Over50 ///
+        Over50 ///
+        "50+ Hours" ///
+        LS_Hours ///
+        `makegraphs'
+
+
+    ********************************************************************************
+    * MODEL 5
+    * DISABILITY AND CARER STATUS
+    ********************************************************************************
+
+    xtreg LifeSat ///
+        $LSControls ///
+        i.`emp'##i.DisabledCarer ///
+        i.`emp'##i.NoDCarer, ///
+        re i(pidp)
+
+    estimates store LS_CarerDisability
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        DisabledCarer ///
+        DisabledCarer ///
+        "Disabled Carer" ///
+        LS_CarerDisability ///
+        `makegraphs'
+
+
+    CareInteractionPlot ///
+        `emp' ///
+        NoDCarer ///
+        NoDCarer ///
+        "Carer without Disability" ///
+        LS_CarerDisability ///
+        `makegraphs'
+
+
+    ********************************************************************************
+    * COMBINED GRAPH
+    ********************************************************************************
+
+    if `makegraphs' == 1 {
+
+        graph combine ///
+            `emp'_UnpaidCarer.gph ///
+            `emp'_HouseholdCarer.gph ///
+            `emp'_NonResidentCarer.gph ///
+            `emp'_Care1.gph ///
+            `emp'_Care2.gph ///
+            `emp'_Care3.gph ///
+            `emp'_Under10.gph ///
+            `emp'_Under19.gph ///
+            `emp'_Over20.gph ///
+            `emp'_Over50.gph ///
+            `emp'_NoDCarer.gph ///
+            `emp'_DisabledCarer.gph, ///
+            name(Combined_`emp', replace) ///
+            title( ///
+                "UKHLS: Life Satisfaction, Unpaid Care and `emp'", ///
+                size(medium) ///
+            ) ///
+            note( ///
+                "Adjusted predictions from random-effects linear regression models using UKHLS.", ///
+                span size(*.6) margin(vsmall) ///
+            ) ///
+            caption( ///
+                "Orange panels indicate statistically significant interactions; blue panels indicate non-significant interactions.", ///
+                span size(*.4) margin(vsmall) ///
+            ) ///
+            xsize(8)
+
+    }
+
+end
+
+
+********************************************************************************
+********************************************************************************
+* 7. RUN MODELS
+********************************************************************************
+********************************************************************************
+
+foreach var of local RunVars {
+
+    UnpaidCareLifeSat `var' `makegraphs'
+
+}
+
+
+********************************************************************************
+* END
+********************************************************************************
