@@ -1,0 +1,255 @@
+********************************************************************************
+* NOTE ON HEALTH CONDITION VARIABLES
+********************************************************************************
+
+* HasHealthC and HasHealthC2 contain the same underlying measure.
+*
+* HasHealthC2 is used in the standalone "any health condition" models so that
+* its coefficient can be uniquely identified in coefplot.
+*
+* HasHealthC is included as an adjustment variable in models examining
+* individual health conditions. Using a duplicate variable name prevents
+* these adjustment coefficients from being included in the final graphs.
+
+********************************************************************************
+* LFS EMPLOYMENT OUTCOMES AND HEALTH
+* Thesis appendix
+********************************************************************************
+
+*------------------------------------------------------------------------------
+* 0. GLOBAL MODEL SPECIFICATION
+*------------------------------------------------------------------------------
+
+* Common control variables
+local controls ///
+    Fem AGE Age2 HighEducation ///
+    Seperated Single AllOtherEthnicity
+
+* Binary employment outcomes
+local outcomes ///
+    PEET ///
+    PartTime ///
+    WorkHome ///
+    PublicSector ///
+    Left3Months ///
+    Redundant3Months ///
+    EmployedSelfEmp ///
+    LookingAnotherJob
+
+* Short names used when storing estimates
+local outnames ///
+    PEET ///
+    PT ///
+    WH ///
+    PS ///
+    LEFT ///
+    RED ///
+    SELF ///
+    LOOK
+
+* Individual health conditions
+local conditions ///
+    AMentalHealth ///
+    ALegsFeet ///
+    AHearingSight ///
+    ASkinAllergies ///
+    ABreathing ///
+    AHeart ///
+    ALiverKidneyDigestion ///
+    ADiabetes ///
+    ALearningDifficulty ///
+    AProgressive ///
+    AEpilepsy ///
+    AArmsHands ///
+    ABackNeck
+
+* Short names for stored estimates
+local connames ///
+    MH ///
+    LEGS ///
+    HS ///
+    SKIN ///
+    BREATH ///
+    HEART ///
+    LIVER ///
+    DIAB ///
+    LD ///
+    PROG ///
+    EPILEP ///
+    ARMS ///
+    BACK
+
+
+********************************************************************************
+* 1. BINARY EMPLOYMENT OUTCOMES
+********************************************************************************
+
+local nout : word count `outcomes'
+
+forvalues o = 1/`nout' {
+
+    * Identify outcome and abbreviated name
+    local outcome : word `o' of `outcomes'
+    local outname : word `o' of `outnames'
+
+    display _newline
+    display "============================================================"
+    display "OUTCOME: `outcome'"
+    display "============================================================"
+
+
+    *--------------------------------------------------------------------------
+    * Model 1: Disability
+    *--------------------------------------------------------------------------
+
+    logistic `outcome' ///
+        `controls' ///
+        Disabled ///
+        [pweight=PWT18]
+
+    estimates store `outname'_D
+
+
+    *--------------------------------------------------------------------------
+    * Model 2: Any health condition
+    *--------------------------------------------------------------------------
+
+    logistic `outcome' ///
+        `controls' ///
+        HasHealthC2 ///
+        [pweight=PWT18]
+
+    estimates store `outname'_HC
+
+
+    *--------------------------------------------------------------------------
+    * Models 3+: Individual health conditions
+    *
+    * HasHealthC is retained as a control so that each condition coefficient
+    * represents the additional association of that particular condition.
+    *--------------------------------------------------------------------------
+
+    local ncond : word count `conditions'
+
+    forvalues c = 1/`ncond' {
+
+        local condition : word `c' of `conditions'
+        local conname   : word `c' of `connames'
+
+        logistic `outcome' ///
+            `controls' ///
+            `condition' ///
+            HasHealthC ///
+            [pweight=PWT18]
+
+        estimates store `outname'_`conname'
+    }
+
+
+    *--------------------------------------------------------------------------
+    * Display results for this outcome
+    *--------------------------------------------------------------------------
+
+    estimates table ///
+        `outname'_D ///
+        `outname'_HC ///
+        `outname'_MH ///
+        `outname'_EPILEP ///
+        `outname'_LD ///
+        `outname'_LEGS ///
+        `outname'_HS ///
+        `outname'_ARMS ///
+        `outname'_BACK ///
+        `outname'_SKIN ///
+        `outname'_PROG ///
+        `outname'_DIAB ///
+        `outname'_LIVER ///
+        `outname'_HEART ///
+        `outname'_BREATH, ///
+        b(%8.4g) star stats(N ll bic r2)
+
+}
+
+
+********************************************************************************
+* 2. MULTINOMIAL OCCUPATION MODELS
+*    Outcome = grouped_JobIndustry
+********************************************************************************
+
+display _newline
+display "============================================================"
+display "OCCUPATION: grouped_JobIndustry"
+display "============================================================"
+
+
+*------------------------------------------------------------------------------
+* Disability
+*------------------------------------------------------------------------------
+
+mlogit grouped_JobIndustry ///
+    `controls' ///
+    Disabled ///
+    [pweight=PWT18]
+
+estimates store OCC_D
+
+
+*------------------------------------------------------------------------------
+* Any health condition
+*------------------------------------------------------------------------------
+
+mlogit grouped_JobIndustry ///
+    `controls' ///
+    HasHealthC2 ///
+    [pweight=PWT18]
+
+estimates store OCC_HC
+
+
+*------------------------------------------------------------------------------
+* Individual health conditions
+*------------------------------------------------------------------------------
+
+local ncond : word count `conditions'
+
+forvalues c = 1/`ncond' {
+
+    local condition : word `c' of `conditions'
+    local conname   : word `c' of `connames'
+
+    mlogit grouped_JobIndustry ///
+        `controls' ///
+        `condition' ///
+        HasHealthC ///
+        [pweight=PWT18]
+
+    estimates store OCC_`conname'
+}
+
+
+********************************************************************************
+* 3. OCCUPATION RESULTS TABLE
+********************************************************************************
+
+estimates table ///
+    OCC_D ///
+    OCC_HC ///
+    OCC_MH ///
+    OCC_EPILEP ///
+    OCC_LD ///
+    OCC_LEGS ///
+    OCC_HS ///
+    OCC_ARMS ///
+    OCC_BACK ///
+    OCC_SKIN ///
+    OCC_PROG ///
+    OCC_DIAB ///
+    OCC_LIVER ///
+    OCC_HEART ///
+    OCC_BREATH, ///
+    b(%8.4g) star stats(N ll bic r2)
+
+
+********************************************************************************
+* END
+********************************************************************************
