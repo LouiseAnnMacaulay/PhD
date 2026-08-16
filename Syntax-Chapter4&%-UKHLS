@@ -1,0 +1,1954 @@
+********************************************************************************
+********************************************************************************
+* UKHLS CHAPTERS 4 AND 5
+* HEALTH, EMPLOYMENT AND LIFE SATISFACTION
+*
+* GitHub appendix
+*
+* Main analyses:
+*
+*   A. Health and employment outcomes - random-effects xtlogit
+*   B. Health, employment and life satisfaction - random-effects xtreg
+*   C. Health and occupation - survey-weighted multinomial logit
+*   D. Disability onset and labour-market participation
+*
+********************************************************************************
+********************************************************************************
+
+estimates clear
+
+
+********************************************************************************
+* 1. SELECT EMPLOYMENT OUTCOME(S)
+*
+* local run_outcomes "PEET"
+*
+* To run all outcomes: "`employment_outcomes'"
+********************************************************************************
+
+local employment_outcomes ///
+    PEET ///
+    PartTime ///
+    TempJob ///
+    SelfEmployed ///
+    ZeroHours ///
+    FlexiTime ///
+    WorkHome ///
+    Sector ///
+    MayLoseJob ///
+    MayQuitJob
+
+
+local run_outcomes "PEET"
+
+
+********************************************************************************
+* 2. ANALYSIS SWITCHES
+*
+* 1 = run
+* 0 = do not run
+*
+********************************************************************************
+
+local run_employment_models 1
+local run_lifesat_models    1
+local make_employment_graphs 1
+local make_lifesat_graphs    1
+
+
+
+********************************************************************************
+********************************************************************************
+* HEALTH AND EMPLOYMENT OUTCOMES
+* RANDOM-EFFECTS LOGISTIC REGRESSION
+********************************************************************************
+********************************************************************************
+
+
+capture program drop UKHLS_EmploymentHealth
+
+program define UKHLS_EmploymentHealth
+
+    args outcome prefix makegraphs
+
+
+    display _newline
+    display "============================================================"
+    display "UKHLS EMPLOYMENT OUTCOME: `outcome'"
+    display "============================================================"
+
+
+    *--------------------------------------------------------------------------*
+    * Controls
+    *--------------------------------------------------------------------------*
+
+    local controls ///
+        Fem ///
+        dvage ///
+        Age2 ///
+        HighEducation ///
+        White ///
+        AfricanCaribbean ///
+        Asian ///
+        Indian ///
+        Arab ///
+        Mixed ///
+        Other ///
+        Single ///
+        Seperated
+
+
+    *--------------------------------------------------------------------------*
+    * Specific health conditions
+    *--------------------------------------------------------------------------*
+
+    local conditions ///
+        MentalHealth ///
+        Epilepsy ///
+        Thyroid ///
+        Lung ///
+        Heart ///
+        Arthritis ///
+        Diabetes ///
+        Cancer ///
+        Liver
+
+
+    *--------------------------------------------------------------------------*
+    * Functional limitations
+    *--------------------------------------------------------------------------*
+
+    local limitations ///
+        Mobility ///
+        Lifting ///
+        ManualDexterity ///
+        Continence ///
+        Hearing ///
+        Sight ///
+        Communication ///
+        Memory ///
+        RDanger ///
+        Coordination ///
+        PersonalCare ///
+        OtherHCPB
+
+
+    ****************************************************************************
+    * A1. DISABILITY
+    ****************************************************************************
+
+    xtlogit `outcome' ///
+        `controls' ///
+        Disabled, ///
+        re i(pidp)
+
+    estimates store `prefix'_Dis
+
+
+    ****************************************************************************
+    * A2. ANY HEALTH CONDITION
+    ****************************************************************************
+
+    xtlogit `outcome' ///
+        `controls' ///
+        HealthCondition, ///
+        re i(pidp)
+
+    estimates store `prefix'_HC
+
+
+    ****************************************************************************
+    * A3. POOR SELF-RATED HEALTH
+    ****************************************************************************
+
+    xtlogit `outcome' ///
+        `controls' ///
+        HealthNotGood, ///
+        re i(pidp)
+
+    estimates store `prefix'_Poor
+
+
+    ****************************************************************************
+    * A4. SPECIFIC HEALTH CONDITIONS
+    *
+    * HasHC controls for having any health condition.
+    ****************************************************************************
+
+    foreach x of local conditions {
+
+        xtlogit `outcome' ///
+            `controls' ///
+            HasHC ///
+            `x', ///
+            re i(pidp)
+
+        estimates store `prefix'_HC_`x'
+
+    }
+
+
+    ****************************************************************************
+    * A5. OVERALL INHIBITING / FUNCTIONAL LIMITATION
+    ****************************************************************************
+
+    xtlogit `outcome' ///
+        `controls' ///
+        Inhibiting_Symptom, ///
+        re i(pidp)
+
+    estimates store `prefix'_PB
+
+
+    ****************************************************************************
+    * A6. SPECIFIC FUNCTIONAL LIMITATIONS
+    *
+    * HasPB controls for the presence of an inhibiting limitation.
+    ****************************************************************************
+
+    foreach x of local limitations {
+
+        xtlogit `outcome' ///
+            `controls' ///
+            HasPB ///
+            `x', ///
+            re i(pidp)
+
+        estimates store `prefix'_PB_`x'
+
+    }
+
+
+    ****************************************************************************
+    * A7. HEALTH CONDITION RESULTS TABLE
+    ****************************************************************************
+
+    estimates table ///
+        `prefix'_Dis ///
+        `prefix'_HC ///
+        `prefix'_Poor ///
+        `prefix'_HC_MentalHealth ///
+        `prefix'_HC_Epilepsy ///
+        `prefix'_HC_Thyroid ///
+        `prefix'_HC_Lung ///
+        `prefix'_HC_Heart ///
+        `prefix'_HC_Arthritis ///
+        `prefix'_HC_Diabetes ///
+        `prefix'_HC_Cancer ///
+        `prefix'_HC_Liver, ///
+        stats(N ll bic rho r2_p) ///
+        b(%8.4g) ///
+        star
+
+
+    ****************************************************************************
+    * A8. FUNCTIONAL LIMITATION RESULTS TABLE
+    ****************************************************************************
+
+    estimates table ///
+        `prefix'_PB ///
+        `prefix'_PB_Mobility ///
+        `prefix'_PB_Lifting ///
+        `prefix'_PB_ManualDexterity ///
+        `prefix'_PB_Continence ///
+        `prefix'_PB_Hearing ///
+        `prefix'_PB_Sight ///
+        `prefix'_PB_Communication ///
+        `prefix'_PB_Memory ///
+        `prefix'_PB_RDanger ///
+        `prefix'_PB_Coordination ///
+        `prefix'_PB_PersonalCare ///
+        `prefix'_PB_OtherHCPB, ///
+        stats(N ll bic rho r2_p) ///
+        b(%8.4g) ///
+        star
+
+
+
+********************************************************************************
+********************************************************************************
+* PART B
+* LIFE SATISFACTION × EMPLOYMENT × HEALTH
+*
+* Random-effects linear regression
+********************************************************************************
+********************************************************************************
+
+
+capture program drop UKHLS_LifeSat
+
+program define UKHLS_LifeSat
+
+    args outcome prefix makegraphs
+
+
+    display _newline
+    display "============================================================"
+    display "LIFE SATISFACTION × `outcome'"
+    display "============================================================"
+
+
+    *--------------------------------------------------------------------------*
+    * Controls used in condition/symptom interaction models
+    *--------------------------------------------------------------------------*
+
+    local controls ///
+        Fem ///
+        dvage ///
+        Age2 ///
+        HighEducation ///
+        WhiteOther ///
+        OtherEthnicity ///
+        Single ///
+        Seperated
+
+
+    *--------------------------------------------------------------------------*
+    * Health conditions
+    *--------------------------------------------------------------------------*
+
+    local conditions ///
+        MentalHealth ///
+        Epilepsy ///
+        Thyroid ///
+        Lung ///
+        Heart ///
+        Arthritis ///
+        Diabetes ///
+        Cancer ///
+        Liver
+
+
+    *--------------------------------------------------------------------------*
+    * Functional limitations
+    *--------------------------------------------------------------------------*
+
+    local symptoms ///
+        Lifting ///
+        Mobility ///
+        ManualDexterity ///
+        Continence ///
+        Hearing ///
+        Sight ///
+        Communication ///
+        Memory ///
+        RDanger ///
+        Coordination ///
+        PersonalCare
+
+
+    ****************************************************************************
+    * B1. SPECIFIC HEALTH CONDITIONS
+    ****************************************************************************
+
+    foreach var of local conditions {
+
+        xtreg LifeSat ///
+            i.`outcome'##i.HasHC ///
+            `controls' ///
+            i.`outcome'##i.`var' ///
+            if hcmiss==0, ///
+            re i(pidp)
+
+        estimates store LS_`prefix'_`var'
+
+
+        *----------------------------------------------------------------------*
+        * Test focal interaction
+        *----------------------------------------------------------------------*
+
+        testparm i.`outcome'#i.`var'
+
+        local pval = r(p)
+
+
+        *----------------------------------------------------------------------*
+        * Margins
+        *----------------------------------------------------------------------*
+
+        margins, ///
+            at(`outcome'=(0 1) `var'=(0 1)) ///
+            level(95)
+
+
+        *----------------------------------------------------------------------*
+        * Graph
+        *----------------------------------------------------------------------*
+
+        if `makegraphs' == 1 {
+
+            if `pval' < 0.05 {
+
+                marginsplot, ///
+                    scheme(Rainbow) ///
+                    plotopts( ///
+                        lwidth(medthick) ///
+                        lcolor(%70) ///
+                        msize(medium) ///
+                        mlcolor(yellow) ///
+                        mcolor(%75) ///
+                    ) ///
+                    recastci(rarea) ///
+                    ciopts(fcolor(%40)) ///
+                    title("`var'", size(medium)) ///
+                    xsize(5) ysize(5) ///
+                    xlabel(0 "No" 1 "Yes") ///
+                    xscale(range(-0.15 1.15)) ///
+                    ylab(, glcolor(gs15) glpattern(solid)) ///
+                    ytitle("Life Satisfaction") ///
+                    xtitle("") ///
+                    legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                    saving(`var'_`prefix'.gph, replace)
+
+            }
+
+            else {
+
+                marginsplot, ///
+                    scheme(tab2) ///
+                    plotopts( ///
+                        lwidth(medthick) ///
+                        lcolor(%70) ///
+                        msize(medium) ///
+                        mlcolor(yellow) ///
+                        mcolor(%75) ///
+                    ) ///
+                    recastci(rarea) ///
+                    ciopts(fcolor(%40)) ///
+                    title("`var'", size(medium)) ///
+                    xsize(5) ysize(5) ///
+                    xlabel(0 "No" 1 "Yes") ///
+                    xscale(range(-0.15 1.15)) ///
+                    ylab(, glcolor(gs15) glpattern(solid)) ///
+                    ytitle("Life Satisfaction") ///
+                    xtitle("") ///
+                    legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                    saving(`var'_`prefix'.gph, replace)
+
+            }
+        }
+    }
+
+
+    ****************************************************************************
+    * B2. SPECIFIC FUNCTIONAL LIMITATIONS
+    ****************************************************************************
+
+    foreach var of local symptoms {
+
+        xtreg LifeSat ///
+            i.`outcome'##i.HasPB ///
+            `controls' ///
+            i.`outcome'##i.`var' ///
+            if pbmiss==0, ///
+            re i(pidp)
+
+        estimates store LS_`prefix'_`var'
+
+
+        testparm i.`outcome'#i.`var'
+
+        local pval = r(p)
+
+
+        margins, ///
+            at(`outcome'=(0 1) `var'=(0 1)) ///
+            level(95)
+
+
+        if `makegraphs' == 1 {
+
+            if `pval' < 0.05 {
+
+                marginsplot, ///
+                    scheme(Rainbow) ///
+                    plotopts( ///
+                        lwidth(medthick) ///
+                        lcolor(%70) ///
+                        msize(medium) ///
+                        mlcolor(yellow) ///
+                        mcolor(%75) ///
+                    ) ///
+                    recastci(rarea) ///
+                    ciopts(fcolor(%40)) ///
+                    title("`var'", size(medium)) ///
+                    xsize(5) ysize(5) ///
+                    xlabel(0 "No" 1 "Yes") ///
+                    xscale(range(-0.15 1.15)) ///
+                    ylab(, glcolor(gs15) glpattern(solid)) ///
+                    ytitle("Life Satisfaction") ///
+                    xtitle("") ///
+                    legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                    saving(`var'_`prefix'.gph, replace)
+
+            }
+
+            else {
+
+                marginsplot, ///
+                    scheme(tab2) ///
+                    plotopts( ///
+                        lwidth(medthick) ///
+                        lcolor(%70) ///
+                        msize(medium) ///
+                        mlcolor(yellow) ///
+                        mcolor(%75) ///
+                    ) ///
+                    recastci(rarea) ///
+                    ciopts(fcolor(%40)) ///
+                    title("`var'", size(medium)) ///
+                    xsize(5) ysize(5) ///
+                    xlabel(0 "No" 1 "Yes") ///
+                    xscale(range(-0.15 1.15)) ///
+                    ylab(, glcolor(gs15) glpattern(solid)) ///
+                    ytitle("Life Satisfaction") ///
+                    xtitle("") ///
+                    legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                    saving(`var'_`prefix'.gph, replace)
+
+            }
+        }
+    }
+
+
+    ****************************************************************************
+    * B3. DISABILITY
+    ****************************************************************************
+
+    xtreg LifeSat ///
+        `controls' ///
+        i.`outcome'##i.Disabled, ///
+        re i(pidp)
+
+    estimates store LS_`prefix'_Disabled
+
+    testparm i.`outcome'#i.Disabled
+
+    local pval = r(p)
+
+    margins, at(`outcome'=(0 1) Disabled=(0 1))
+
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 local graphscheme "Rainbow"
+        else             local graphscheme "tab2"
+
+        marginsplot, ///
+            scheme(`graphscheme') ///
+            recastci(rarea) ///
+            title("Disabled", size(medium)) ///
+            xlabel(0 "No" 1 "Yes") ///
+            ytitle("Life Satisfaction") ///
+            xtitle("") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(Disabled_`prefix'.gph, replace)
+
+    }
+
+
+    ****************************************************************************
+    * B4. POOR SELF-RATED HEALTH
+    ****************************************************************************
+
+    xtreg LifeSat ///
+        `controls' ///
+        i.`outcome'##i.HealthNotGood, ///
+        re i(pidp)
+
+    estimates store LS_`prefix'_PoorHealth
+
+    testparm i.`outcome'#i.HealthNotGood
+
+    local pval = r(p)
+
+    margins, at(`outcome'=(0 1) HealthNotGood=(0 1))
+
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 local graphscheme "Rainbow"
+        else             local graphscheme "tab2"
+
+        marginsplot, ///
+            scheme(`graphscheme') ///
+            recastci(rarea) ///
+            title("Poor Health", size(medium)) ///
+            xlabel(0 "No" 1 "Yes") ///
+            ytitle("Life Satisfaction") ///
+            xtitle("") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(HealthNotGood_`prefix'.gph, replace)
+
+    }
+
+
+    ****************************************************************************
+    * B5. ANY HEALTH CONDITION
+    ****************************************************************************
+
+    xtreg LifeSat ///
+        `controls' ///
+        i.`outcome'##i.HasHC ///
+        if hcmiss==0, ///
+        re i(pidp)
+
+    estimates store LS_`prefix'_HasHC
+
+    testparm i.`outcome'#i.HasHC
+
+    local pval = r(p)
+
+    margins, at(`outcome'=(0 1) HasHC=(0 1))
+
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 local graphscheme "Rainbow"
+        else             local graphscheme "tab2"
+
+        marginsplot, ///
+            scheme(`graphscheme') ///
+            recastci(rarea) ///
+            title("Health Condition", size(medium)) ///
+            xlabel(0 "No" 1 "Yes") ///
+            ytitle("Life Satisfaction") ///
+            xtitle("") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(HasHC_`prefix'.gph, replace)
+
+    }
+
+
+    ****************************************************************************
+    * B6. ANY INHIBITING FUNCTIONAL LIMITATION
+    ****************************************************************************
+
+    xtreg LifeSat ///
+        `controls' ///
+        i.`outcome'##i.Inhibiting_Symptom ///
+        if pbmiss==0, ///
+        re i(pidp)
+
+    estimates store LS_`prefix'_Inhibiting
+
+    testparm i.`outcome'#i.Inhibiting_Symptom
+
+    local pval = r(p)
+
+    margins, ///
+        at(`outcome'=(0 1) Inhibiting_Symptom=(0 1))
+
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 local graphscheme "Rainbow"
+        else             local graphscheme "tab2"
+
+        marginsplot, ///
+            scheme(`graphscheme') ///
+            recastci(rarea) ///
+            title("Inhibiting Symptom", size(medium)) ///
+            xlabel(0 "No" 1 "Yes") ///
+            ytitle("Life Satisfaction") ///
+            xtitle("") ///
+            legend(pos(6) ring(2) col(1) size(vsmall)) ///
+            saving(Inhibiting_Symptom_`prefix'.gph, replace)
+
+    }
+
+
+    ****************************************************************************
+    * B7. COMBINED LIFE SATISFACTION GRAPHS
+    ****************************************************************************
+
+    if `makegraphs' == 1 {
+
+        graph combine ///
+            MentalHealth_`prefix'.gph ///
+            Epilepsy_`prefix'.gph ///
+            Thyroid_`prefix'.gph ///
+            Lung_`prefix'.gph ///
+            Heart_`prefix'.gph ///
+            Arthritis_`prefix'.gph ///
+            Diabetes_`prefix'.gph ///
+            Cancer_`prefix'.gph ///
+            Liver_`prefix'.gph ///
+            Disabled_`prefix'.gph ///
+            HealthNotGood_`prefix'.gph ///
+            HasHC_`prefix'.gph, ///
+            name(LS_`prefix'_HC, replace) ///
+            title("Health Condition", size(medium))
+
+
+        graph combine ///
+            Lifting_`prefix'.gph ///
+            Mobility_`prefix'.gph ///
+            ManualDexterity_`prefix'.gph ///
+            Continence_`prefix'.gph ///
+            Hearing_`prefix'.gph ///
+            Sight_`prefix'.gph ///
+            Communication_`prefix'.gph ///
+            Memory_`prefix'.gph ///
+            RDanger_`prefix'.gph ///
+            Coordination_`prefix'.gph ///
+            PersonalCare_`prefix'.gph ///
+            Inhibiting_Symptom_`prefix'.gph, ///
+            name(LS_`prefix'_PB, replace) ///
+            title("Inhibiting Health Condition Symptoms", size(medium))
+
+
+        graph combine ///
+            LS_`prefix'_HC ///
+            LS_`prefix'_PB, ///
+            name(LS_`prefix'_Combined, replace) ///
+            title( ///
+                "UKHLS: Life Satisfaction, Health and `outcome'", ///
+                size(medium) ///
+            ) ///
+            note( ///
+                "Adjusted margins from separate random-effects regression models using UKHLS.", ///
+                span size(*.7) margin(vsmall) ///
+            ) ///
+            caption( ///
+                "Orange graphs indicate statistically significant interactions; blue graphs indicate non-significant interactions.", ///
+                span size(*.4) margin(vsmall) ///
+            ) ///
+            xsize(16) ysize(9) ///
+            graphregion(margin(l=4 r=4))
+
+    }
+
+end
+
+
+
+********************************************************************************
+********************************************************************************
+* PART C
+* RUN SELECTED EMPLOYMENT OUTCOME(S)
+********************************************************************************
+********************************************************************************
+
+
+foreach outcome of local run_outcomes {
+
+
+    ****************************************************************************
+    * Assign short model prefix
+    ****************************************************************************
+
+    if "`outcome'" == "PEET"              local prefix "PEET"
+    else if "`outcome'" == "PartTime"     local prefix "PT"
+    else if "`outcome'" == "TempJob"      local prefix "TEMP"
+    else if "`outcome'" == "SelfEmployed" local prefix "SELF"
+    else if "`outcome'" == "ZeroHours"    local prefix "ZH"
+    else if "`outcome'" == "FlexiTime"    local prefix "FLEX"
+    else if "`outcome'" == "WorkHome"     local prefix "WH"
+    else if "`outcome'" == "Sector"       local prefix "SECTOR"
+    else if "`outcome'" == "MayLoseJob"   local prefix "LOSE"
+    else if "`outcome'" == "MayQuitJob"   local prefix "QUIT"
+
+
+    ****************************************************************************
+    * Employment outcome models
+    ****************************************************************************
+
+    if `run_employment_models' == 1 {
+
+        UKHLS_EmploymentHealth ///
+            `outcome' ///
+            `prefix' ///
+            `make_employment_graphs'
+
+    }
+
+
+    ****************************************************************************
+    * Life Satisfaction models
+    ****************************************************************************
+
+    if `run_lifesat_models' == 1 {
+
+        UKHLS_LifeSat ///
+            `outcome' ///
+            `prefix' ///
+            `make_lifesat_graphs'
+
+    }
+
+}
+
+
+
+********************************************************************************
+********************************************************************************
+* PART D
+* OCCUPATION AND HEALTH
+*
+* Survey-weighted multinomial logistic regression
+********************************************************************************
+********************************************************************************
+
+
+clear matrix
+
+
+********************************************************************************
+* D1. ANALYSIS SAMPLE
+********************************************************************************
+
+capture drop OccupationSample
+
+gen OccupationSample = ///
+    Employed==1 ///
+    & OccupationClassification < . ///
+    & Fem < . ///
+    & dvage < . ///
+    & Age2 < . ///
+    & HighEducation < . ///
+    & Single < . ///
+    & Seperated < . ///
+    & WhiteOther < . ///
+    & OtherEthnicity < .
+
+
+********************************************************************************
+* D2. REFERENCE OCCUPATION
+*
+* Category 4 = Retail / Hospitality
+********************************************************************************
+
+fvset base 4 OccupationClassification
+
+
+********************************************************************************
+* D3. DISABILITY
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.Disabled ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_Disability
+
+
+********************************************************************************
+* D4. ANY HEALTH CONDITION
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.HealthCondition ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_HealthCondition
+
+
+********************************************************************************
+* D5. POOR SELF-RATED HEALTH
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.HealthNotGood ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_HealthRating
+
+
+********************************************************************************
+* D6. SPECIFIC HEALTH CONDITIONS
+********************************************************************************
+
+local occupation_conditions ///
+    MentalHealth ///
+    Epilepsy ///
+    Thyroid ///
+    Lung ///
+    Heart ///
+    Arthritis ///
+    Diabetes ///
+    Cancer ///
+    Liver
+
+
+foreach x of local occupation_conditions {
+
+    svy: mlogit OccupationClassification ///
+        i.HasHC ///
+        i.`x' ///
+        i.Fem ///
+        c.dvage ///
+        c.Age2 ///
+        i.HighEducation ///
+        i.Single ///
+        i.Seperated ///
+        i.WhiteOther ///
+        i.OtherEthnicity ///
+        if OccupationSample==1, ///
+        baseoutcome(4)
+
+    estimates store Occupation_`x'
+
+}
+
+
+********************************************************************************
+* D7. FUNCTIONAL LIMITATIONS
+********************************************************************************
+
+local occupation_limitations ///
+    Mobility ///
+    Lifting ///
+    ManualDexterity ///
+    Continence ///
+    Hearing ///
+    Sight ///
+    Communication ///
+    Memory ///
+    RDanger ///
+    Coordination ///
+    PersonalCare ///
+    OtherHCPB
+
+
+foreach x of local occupation_limitations {
+
+    svy: mlogit OccupationClassification ///
+        i.HasPB ///
+        i.`x' ///
+        i.Fem ///
+        c.dvage ///
+        c.Age2 ///
+        i.HighEducation ///
+        i.Single ///
+        i.Seperated ///
+        i.WhiteOther ///
+        i.OtherEthnicity ///
+        if OccupationSample==1, ///
+        baseoutcome(4)
+
+    estimates store Occupation_`x'
+
+}
+
+
+********************************************************************************
+* D8. OVERALL INHIBITING FUNCTIONAL LIMITATION
+********************************************************************************
+
+svy: mlogit OccupationClassification ///
+    i.Inhibiting_Symptom ///
+    i.Fem ///
+    c.dvage ///
+    c.Age2 ///
+    i.HighEducation ///
+    i.Single ///
+    i.Seperated ///
+    i.WhiteOther ///
+    i.OtherEthnicity ///
+    if OccupationSample==1, ///
+    baseoutcome(4)
+
+estimates store Occupation_Inhibiting_Symptom
+
+
+********************************************************************************
+* D9. HEALTH CONDITION RESULTS
+********************************************************************************
+
+estimates table ///
+    Occupation_Disability ///
+    Occupation_HealthCondition ///
+    Occupation_HealthRating ///
+    Occupation_MentalHealth ///
+    Occupation_Epilepsy ///
+    Occupation_Thyroid ///
+    Occupation_Lung ///
+    Occupation_Heart ///
+    Occupation_Arthritis ///
+    Occupation_Diabetes ///
+    Occupation_Cancer ///
+    Occupation_Liver, ///
+    eform ///
+    b(%8.3f) ///
+    star ///
+    stats(N)
+
+
+********************************************************************************
+* D10. FUNCTIONAL LIMITATION RESULTS
+********************************************************************************
+
+estimates table ///
+    Occupation_Inhibiting_Symptom ///
+    Occupation_Mobility ///
+    Occupation_Lifting ///
+    Occupation_ManualDexterity ///
+    Occupation_Continence ///
+    Occupation_Hearing ///
+    Occupation_Sight ///
+    Occupation_Communication ///
+    Occupation_Memory ///
+    Occupation_RDanger ///
+    Occupation_Coordination ///
+    Occupation_PersonalCare ///
+    Occupation_OtherHCPB, ///
+    eform ///
+    b(%8.3f) ///
+    star ///
+    stats(N)
+
+
+********************************************************************************
+* D11. SAMPLE CHECK
+********************************************************************************
+
+tab OccupationClassification if OccupationSample==1
+
+
+********************************************************************************
+* D12. CHECK STORED MODELS
+********************************************************************************
+
+estimates dir
+
+
+
+
+
+********************************************************************************
+* DISABILITY ONSET AND LABOUR MARKET PARTICIPATION
+* UKHLS
+*
+* Purpose:
+* Examine employment and PEET trajectories surrounding the first observed
+* onset of disability among respondents who entered the panel non-disabled.
+*
+* Main analyses:
+*   1. Employment at disability onset
+*   2. PEET at disability onset
+*   3. Employment exit at disability onset
+*   4. Event-time employment model
+*   5. Event-time PEET model
+*   6. Random-effects employment model
+*   7. Fixed-effects employment model
+*
+* Event-time reference:
+* One wave before first observed disability onset
+********************************************************************************
+
+
+********************************************************************************
+* 0. PREPARATION
+********************************************************************************
+
+sort pidp wave
+
+
+********************************************************************************
+* 1. IDENTIFY FIRST OBSERVATION FOR EACH PERSON
+********************************************************************************
+
+capture drop first_obs
+
+bysort pidp (wave): gen first_obs = (_n==1)
+
+tab first_obs
+
+
+********************************************************************************
+* 2. IDENTIFY PEOPLE DISABLED WHEN THEY ENTER THE PANEL
+*
+* These respondents are excluded from the disability-onset analysis because
+* their transition into disability is not observed during the panel.
+********************************************************************************
+
+capture drop disabled_at_entry
+
+bysort pidp: egen disabled_at_entry = ///
+    max(first_obs==1 & Disabled==1)
+
+tab disabled_at_entry
+
+
+********************************************************************************
+* 3. IDENTIFY FIRST OBSERVED DISABILITY WAVE
+********************************************************************************
+
+capture drop first_disability_wave
+
+bysort pidp (wave): egen first_disability_wave = ///
+    min(cond(Disabled==1, wave, .))
+
+tab first_disability_wave, missing
+
+
+********************************************************************************
+* 4. IDENTIFY DISABILITY-ONSET WAVE
+*
+* acquired_disability = 1 only in the first wave in which disability is
+* observed.
+********************************************************************************
+
+capture drop acquired_disability
+
+gen acquired_disability = ///
+    (wave==first_disability_wave) ///
+    if first_disability_wave<.
+
+tab acquired_disability, missing
+
+
+********************************************************************************
+* 5. CREATE EVENT-TIME VARIABLE
+*
+* disability_eventtime:
+*
+* -3 = three waves before disability onset
+* -2 = two waves before
+* -1 = one wave before
+*  0 = first observed disability wave
+* +1 = one wave after
+* +2 = two waves after
+********************************************************************************
+
+capture drop disability_eventtime
+
+gen disability_eventtime = ///
+    wave - first_disability_wave ///
+    if first_disability_wave<.
+
+tab disability_eventtime, missing
+
+
+********************************************************************************
+* 6. CREATE SHIFTED EVENT-PERIOD VARIABLE
+*
+* disability_eventtime      event_period
+*
+*       -3                       0
+*       -2                       1
+*       -1                       2   <-- REFERENCE
+*        0                       3
+*       +1                       4
+*       +2                       5
+********************************************************************************
+
+capture drop event_period
+
+gen event_period = ///
+    disability_eventtime + 3 ///
+    if inrange(disability_eventtime,-3,2)
+
+label define event_period_lbl ///
+    0 "3 waves before" ///
+    1 "2 waves before" ///
+    2 "1 wave before" ///
+    3 "Disability onset" ///
+    4 "1 wave after" ///
+    5 "2 waves after", replace
+
+label values event_period event_period_lbl
+
+tab event_period, missing
+
+
+********************************************************************************
+* 7. CREATE PREVIOUS-WAVE EMPLOYMENT
+*
+* Only consecutive waves are used to define previous-wave employment.
+********************************************************************************
+
+capture drop Employed_L1
+
+bysort pidp (wave): gen Employed_L1 = ///
+    Employed[_n-1] ///
+    if wave==wave[_n-1]+1
+
+tab Employed_L1, missing
+
+
+********************************************************************************
+* 8. CREATE EMPLOYMENT-EXIT VARIABLE
+*
+* LostEmployment = 1:
+* Employed in the immediately preceding wave and not employed in current wave.
+*
+* LostEmployment = 0:
+* Employed in the immediately preceding wave and remains employed.
+********************************************************************************
+
+capture drop LostEmployment
+
+gen LostEmployment = ///
+    (Employed_L1==1 & Employed==0) ///
+    if Employed_L1==1 & Employed<.
+
+tab LostEmployment, missing
+
+
+********************************************************************************
+* 9. CHECK VARIABLE CONSTRUCTION
+********************************************************************************
+
+sort pidp wave
+
+list pidp wave ///
+    Disabled ///
+    first_obs ///
+    disabled_at_entry ///
+    first_disability_wave ///
+    disability_eventtime ///
+    event_period ///
+    acquired_disability ///
+    Employed_L1 ///
+    Employed ///
+    LostEmployment ///
+    if first_disability_wave<. ///
+    & disabled_at_entry==0 ///
+    in 1/150, sepby(pidp)
+
+
+********************************************************************************
+* 10. SAMPLE COUNTS
+********************************************************************************
+
+capture drop tag_person
+
+egen tag_person = tag(pidp)
+
+* Number of respondents who acquire disability during observation
+* after entering the survey non-disabled
+
+count if tag_person==1 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+* Number of person-wave observations for this group
+
+count if first_disability_wave<. ///
+    & disabled_at_entry==0
+
+
+********************************************************************************
+* 11. MODEL 1
+* EMPLOYMENT BEFORE VS AT DISABILITY ONSET
+********************************************************************************
+
+svy: logit Employed ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityOnset_Employed
+
+
+********************************************************************************
+* 12. MODEL 2
+* PEET BEFORE VS AT DISABILITY ONSET
+********************************************************************************
+
+svy: logit PEET ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityOnset_PEET
+
+
+********************************************************************************
+* 13. MODEL 3
+* EMPLOYMENT EXIT AT DISABILITY ONSET
+*
+* Among observations where the respondent was employed in the immediately
+* preceding wave, test whether employment exit is more likely in the
+* disability-onset wave.
+********************************************************************************
+
+svy: logit LostEmployment ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if Employed_L1==1 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityEmploymentExit
+
+
+********************************************************************************
+* 14. MODEL 4
+* EVENT-TIME MODEL: EMPLOYMENT
+*
+* Reference category:
+* event_period = 2 = one wave before disability onset.
+********************************************************************************
+
+svy: logit Employed ///
+    ib2.event_period ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if event_period<. ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityEventStudy
+
+
+********************************************************************************
+* 15. MODEL 5
+* EVENT-TIME MODEL: PEET
+********************************************************************************
+
+svy: logit PEET ///
+    ib2.event_period ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if event_period<. ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0
+
+est store DisabilityEventStudy_PEET
+
+
+********************************************************************************
+* 16. MODEL 6
+* RANDOM-EFFECTS EMPLOYMENT MODEL
+********************************************************************************
+
+xtlogit Employed ///
+    acquired_disability ///
+    Fem dvage Age2 HighEducation ///
+    Single Seperated ///
+    WhiteOther OtherEthnicity ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0, ///
+    re i(pidp)
+
+est store DisabilityOnset_RE
+
+
+********************************************************************************
+* 17. MODEL 7
+* FIXED-EFFECTS EMPLOYMENT MODEL
+*
+* Time-invariant sex and ethnicity variables are not included.
+********************************************************************************
+
+xtlogit Employed ///
+    acquired_disability ///
+    dvage Age2 HighEducation ///
+    Single Seperated ///
+    if disability_eventtime<=0 ///
+    & first_disability_wave<. ///
+    & disabled_at_entry==0, ///
+    fe i(pidp)
+
+est store DisabilityOnset_FE
+
+
+********************************************************************************
+* 18. MARGINS: SIMPLE EMPLOYMENT-ONSET MODEL
+********************************************************************************
+
+est restore DisabilityOnset_Employed
+
+margins, at(acquired_disability=(0 1))
+
+
+********************************************************************************
+* 19. EVENT-TIME MARGINS: EMPLOYMENT
+********************************************************************************
+
+est restore DisabilityEventStudy
+
+margins event_period
+
+matrix EmploymentMargins = r(table)
+
+matrix list EmploymentMargins
+
+
+********************************************************************************
+* 20. EVENT-TIME MARGINS: PEET
+********************************************************************************
+
+est restore DisabilityEventStudy_PEET
+
+margins event_period
+
+matrix PEETMargins = r(table)
+
+matrix list PEETMargins
+
+
+********************************************************************************
+* 21. FINAL THESIS FIGURE
+* PANEL A: EMPLOYMENT
+********************************************************************************
+
+est restore DisabilityEventStudy
+
+margins event_period
+
+marginsplot, ///
+    recast(line) ///
+    recastci(rarea) ///
+    scheme(white_tableau) ///
+    xlabel( ///
+        0 "3 waves before" ///
+        1 "2 waves before" ///
+        2 "1 wave before" ///
+        3 "Disability onset" ///
+        4 "1 wave after" ///
+        5 "2 waves after", ///
+        angle(45)) ///
+    xtitle("") ///
+    ytitle("Predicted Probability") ///
+    title("A. Employment", size(medium)) ///
+    legend(off) ///
+    xsize(7) ysize(5) ///
+    name(DisabilityEmploymentMargins, replace)
+
+
+********************************************************************************
+* 22. FINAL THESIS FIGURE
+* PANEL B: PEET
+********************************************************************************
+
+est restore DisabilityEventStudy_PEET
+
+margins event_period
+
+marginsplot, ///
+    recast(line) ///
+    recastci(rarea) ///
+    scheme(white_tableau) ///
+    xlabel( ///
+        0 "3 waves before" ///
+        1 "2 waves before" ///
+        2 "1 wave before" ///
+        3 "Disability onset" ///
+        4 "1 wave after" ///
+        5 "2 waves after", ///
+        angle(45)) ///
+    xtitle("") ///
+    ytitle("Predicted Probability") ///
+    title("B. Employment, Education or Training", size(medium)) ///
+    legend(off) ///
+    xsize(7) ysize(5) ///
+    name(DisabilityPEETMargins, replace)
+
+
+********************************************************************************
+* 23. COMBINE FINAL THESIS FIGURE
+********************************************************************************
+
+graph combine ///
+    DisabilityEmploymentMargins ///
+    DisabilityPEETMargins, ///
+    col(2) ///
+    title("Labour Market Participation Before and After Disability Onset", ///
+        span size(medium)) ///
+    xsize(14) ysize(6) ///
+    name(DisabilityOnset_Final, replace)
+
+
+********************************************************************************
+* 24. PAIRWISE EVENT-TIME TESTS
+*
+* These tests establish whether changes between adjacent post-onset periods
+* are statistically significant.
+********************************************************************************
+
+capture log close lincomlog
+
+log using "DisabilityOnset_LincomTests.txt", ///
+    text replace name(lincomlog)
+
+
+********************************************************************************
+* EMPLOYMENT: ONSET VS ONE WAVE AFTER
+********************************************************************************
+
+est restore DisabilityEventStudy
+
+display " "
+display "EMPLOYMENT: DISABILITY ONSET VS 1 WAVE AFTER"
+
+lincom 3.event_period - 4.event_period
+
+
+********************************************************************************
+* EMPLOYMENT: ONE WAVE AFTER VS TWO WAVES AFTER
+********************************************************************************
+
+display " "
+display "EMPLOYMENT: 1 WAVE AFTER VS 2 WAVES AFTER"
+
+lincom 4.event_period - 5.event_period
+
+
+********************************************************************************
+* PEET: ONSET VS ONE WAVE AFTER
+********************************************************************************
+
+est restore DisabilityEventStudy_PEET
+
+display " "
+display "PEET: DISABILITY ONSET VS 1 WAVE AFTER"
+
+lincom 3.event_period - 4.event_period
+
+
+********************************************************************************
+* PEET: ONE WAVE AFTER VS TWO WAVES AFTER
+********************************************************************************
+
+display " "
+display "PEET: 1 WAVE AFTER VS 2 WAVES AFTER"
+
+lincom 4.event_period - 5.event_period
+
+
+log close lincomlog
+
+
+********************************************************************************
+* 25. GITHUB OUTPUT 1
+* MAIN DISABILITY-ONSET MODELS
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_Employed ///
+    DisabilityOnset_PEET ///
+    DisabilityEmploymentExit ///
+    using "DisabilityOnset_MainModels.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles( ///
+        "Employment" ///
+        "PEET" ///
+        "Employment Exit" ///
+    ) ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 26. GITHUB OUTPUT 2
+* EVENT-TIME MODELS
+********************************************************************************
+
+esttab ///
+    DisabilityEventStudy ///
+    DisabilityEventStudy_PEET ///
+    using "DisabilityOnset_EventTime.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    order( ///
+        0.event_period ///
+        1.event_period ///
+        2.event_period ///
+        3.event_period ///
+        4.event_period ///
+        5.event_period ///
+    ) ///
+    coeflabels( ///
+        0.event_period "3 Waves Before" ///
+        1.event_period "2 Waves Before" ///
+        2.event_period "1 Wave Before (Reference)" ///
+        3.event_period "Disability Onset" ///
+        4.event_period "1 Wave After" ///
+        5.event_period "2 Waves After" ///
+    ) ///
+    mtitles("Employment" "PEET") ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 27. GITHUB OUTPUT 3
+* RANDOM- AND FIXED-EFFECTS MODELS
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_RE ///
+    DisabilityOnset_FE ///
+    using "DisabilityOnset_RE_FE.txt", ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles("Random Effects" "Fixed Effects") ///
+    stats(N, fmt(0) labels("N")) ///
+    replace
+
+
+********************************************************************************
+* 28. DISPLAY MAIN RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_Employed ///
+    DisabilityOnset_PEET ///
+    DisabilityEmploymentExit, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles( ///
+        "Employment" ///
+        "PEET" ///
+        "Employment Exit" ///
+    ) ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 29. DISPLAY EVENT-TIME RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    DisabilityEventStudy ///
+    DisabilityEventStudy_PEET, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    order( ///
+        0.event_period ///
+        1.event_period ///
+        2.event_period ///
+        3.event_period ///
+        4.event_period ///
+        5.event_period ///
+    ) ///
+    coeflabels( ///
+        0.event_period "3 Waves Before" ///
+        1.event_period "2 Waves Before" ///
+        2.event_period "1 Wave Before (Reference)" ///
+        3.event_period "Disability Onset" ///
+        4.event_period "1 Wave After" ///
+        5.event_period "2 Waves After" ///
+    ) ///
+    mtitles("Employment" "PEET") ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+
+
+********************************************************************************
+* 30. DISPLAY RANDOM- AND FIXED-EFFECTS RESULTS IN STATA
+********************************************************************************
+
+esttab ///
+    DisabilityOnset_RE ///
+    DisabilityOnset_FE, ///
+    eform ///
+    b(3) ci(3) ///
+    star(* 0.05 ** 0.01 *** 0.001) ///
+    label ///
+    mtitles("Random Effects" "Fixed Effects") ///
+    stats(N, fmt(0) labels("N")) ///
+    compress
+	
+	
+********************************************************************************
+********************************************************************************
+* UKHLS: LIFE SATISFACTION, EMPLOYMENT AND UNPAID CARE
+*
+* GitHub appendix
+*
+* Outcome:
+*   LifeSat (continuous)
+*
+* Estimator:
+*   Random-effects linear regression (xtreg, re)
+*
+* Purpose:
+*   Examine whether associations between employment characteristics and
+*   life satisfaction differ according to unpaid caring circumstances.
+********************************************************************************
+********************************************************************************
+
+
+********************************************************************************
+* 0. PANEL SETUP
+********************************************************************************
+
+xtset pidp wave
+
+
+********************************************************************************
+* 1. EMPLOYMENT VARIABLES
+********************************************************************************
+
+local employment_variables ///
+    PEET ///
+    Employed ///
+    PartTime ///
+    TempJob ///
+    ZeroHours ///
+    FlexiTime ///
+    WorkHome ///
+    JobStress ///
+    MayLoseJob ///
+    MayQuitJob ///
+    PublicCompany ///
+    ManagerResponsibility ///
+    RedundantSacked
+
+
+********************************************************************************
+* 2. SELECT EMPLOYMENT VARIABLE(S)
+*
+* Change this line to run only the analysis you want.
+*
+* Examples:
+*
+* local run_variables "PEET"
+* local run_variables "PartTime"
+* local run_variables "WorkHome"
+*
+* Run several:
+* local run_variables "PEET PartTime WorkHome"
+*
+* Run everything:
+* local run_variables "`employment_variables'"
+********************************************************************************
+
+local run_variables "PEET"
+
+
+********************************************************************************
+* 3. COMMON CONTROLS
+********************************************************************************
+
+local controls ///
+    Fem ///
+    dvage ///
+    Age2 ///
+    HighEducation ///
+    White ///
+    AfricanCaribbean ///
+    Asian ///
+    Indian ///
+    Arab ///
+    Mixed ///
+    Other ///
+    Single ///
+    Seperated
+
+
+********************************************************************************
+* 4. GRAPH SWITCH
+*
+* 1 = create margins plots
+* 0 = estimate models/tests/margins only
+********************************************************************************
+
+local makegraphs 1
+
+
+********************************************************************************
+********************************************************************************
+* HELPER PROGRAM
+*
+* Uses the currently restored regression model to:
+*   - test the focal interaction
+*   - calculate adjusted predictions
+*   - create the margins plot
+*
+********************************************************************************
+********************************************************************************
+
+capture program drop CareLifeSatPlot
+
+program define CareLifeSatPlot
+
+    args employment carevar suffix graphtitle modelname makegraphs
+
+    * Restore the appropriate regression
+    estimates restore `modelname'
+
+
+    *--------------------------------------------------------------------------
+    * Test employment × care interaction
+    *--------------------------------------------------------------------------
+
+    testparm i.`employment'#i.`carevar'
+
+    local pval = r(p)
+
+    display _newline
+    display "`employment' × `carevar' interaction:"
+    display "p = " %6.4f `pval'
+
+
+    *--------------------------------------------------------------------------
+    * Adjusted predicted Life Satisfaction
+    *--------------------------------------------------------------------------
+
+    margins, ///
+        at( ///
+            `employment'=(0 1) ///
+            `carevar'=(0 1) ///
+        ) ///
+        level(95)
+
+
+    *--------------------------------------------------------------------------
+    * Graph
+    *--------------------------------------------------------------------------
+
+    if `makegraphs' == 1 {
+
+        if `pval' < 0.05 {
+
+            marginsplot, ///
+                xdimension(`employment') ///
+                plotdimension(`carevar') ///
+                scheme(Rainbow) ///
+                plot1opts( ///
+                    lwidth(medium) ///
+                    lcolor(orange_red) ///
+                    lpattern(solid) ///
+                ) ///
+                plot2opts( ///
+                    lwidth(medium) ///
+                    lcolor(dkorange) ///
+                    lpattern(dash) ///
+                ) ///
+                recastci(rarea) ///
+                ciopts(fcolor(%40)) ///
+                title("`graphtitle'") ///
+                xsize(5) ///
+                ysize(5) ///
+                xlabel( ///
+                    0 "`employment' = 0" ///
+                    1 "`employment' = 1", ///
+                    labsize(vsmall) ///
+                ) ///
+                xscale(range(-0.15 1.15)) ///
+                ylabel(, glcolor(gs15) glpattern(solid)) ///
+                ytitle("Life Satisfaction") ///
+                xtitle("") ///
+                legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                graphregion(margin(l+5 r+5)) ///
+                saving(`employment'_`suffix'.gph, replace)
+
+        }
+
+        else {
+
+            marginsplot, ///
+                xdimension(`employment') ///
+                plotdimension(`carevar') ///
+                scheme(tab2) ///
+                plot1opts( ///
+                    lwidth(medium) ///
+                    lcolor(navy) ///
+                    lpattern(solid) ///
+                ) ///
+                plot2opts( ///
+                    lwidth(medium) ///
+                    lcolor(edkblue) ///
+                    lpattern(dash) ///
+                ) ///
+                recastci(rarea) ///
+                ciopts(fcolor(%40)) ///
+                title("`graphtitle'") ///
+                xsize(5) ///
+                ysize(5) ///
+                xlabel( ///
+                    0 "`employment' = 0" ///
+                    1 "`employment' = 1", ///
+                    labsize(vsmall) ///
+                ) ///
+                xscale(range(-0.15 1.15)) ///
+                ylabel(, glcolor(gs15) glpattern(solid)) ///
+                ytitle("Life Satisfaction") ///
+                xtitle("") ///
+                legend(pos(6) ring(2) col(1) size(vsmall)) ///
+                graphregion(margin(l+5 r+5)) ///
+                saving(`employment'_`suffix'.gph, replace)
+
+        }
+    }
+
+end
+
+
+********************************************************************************
+********************************************************************************
+* MAIN PROGRAM
+********************************************************************************
+********************************************************************************
+
+capture program drop CarerLifeSat
+
+program define CarerLifeSat
+
+    args employment makegraphs
+
+    display _newline
+    display "============================================================"
+    display "LIFE SATISFACTION AND `employment'"
+    display "============================================================"
+
+
+    ****************************************************************************
+    * MODEL 1
+    * UNPAID CARER STATUS
+    ****************************************************************************
+
+    xtreg LifeSat ///
+        $controls_placeholder ///
+        i.`employment'##i.UnpaidCarer, ///
+        re
+
+end
