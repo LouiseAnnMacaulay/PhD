@@ -52,7 +52,6 @@ MigraneNer~s |                                                                  
 
 LIFE SATISFACTION AND PEET/NEET
 
-
 . list ///
 >     HealthMeasure ///
 >     Type ///
@@ -68,25 +67,27 @@ LIFE SATISFACTION AND PEET/NEET
   +-----------------------------------------------------------------------------------------------------------+
   |      HealthMeasure        Type   InteractionP   NEET_NoHealth   NEET_Health   PEET_NoHealth   PEET_Health |
   |-----------------------------------------------------------------------------------------------------------|
-  |               Back   condition         0.1162           7.095         6.617           7.817         7.605 |
-  |              Blood   condition         0.7463           7.068         7.021           7.809         7.875 |
-  |      BoneArthritis   condition         0.0918           7.103         6.796           7.818         7.723 |
-  |          Breathing   condition         0.0056           7.080         6.888           7.794         7.992 |
-  |             Cancer   condition         0.3990           7.069         6.930           7.814         7.421 |
-  |          Digestive   condition         0.2710           7.072         6.973           7.823         7.536 |
-  |           Epilepsy   condition         0.3310           7.069         6.942           7.812         7.341 |
-  |             EyeEar   condition         0.2335           7.077         6.680           7.810         7.753 |
-  |   HeartCirculation   condition         0.4411           7.059         7.146           7.810         7.796 |
-  | LearningDifficulty   condition         0.9171           7.063         7.906           7.809         8.531 |
-  |      MentalIllness   condition         0.0000           7.332         5.643           7.887         6.847 |
-  | MetabolicCondition   condition         0.4034           7.067         7.055           7.815         7.638 |
-  |      MigraneNerves   condition         0.6362           7.096         6.464           7.825         7.293 |
-  |               Skin   condition         0.4109           7.066         7.083           7.804         8.057 |
+  |               Back   condition         0.0363           7.140         6.660           7.861         7.714 |
+  |              Blood   condition         0.1664           7.114         6.916           7.854         8.064 |
+  |      BoneArthritis   condition         0.0597           7.142         6.887           7.860         7.823 |
+  |          Breathing   condition         0.0143           7.120         6.991           7.841         8.036 |
+  |             Cancer   condition         0.1661           7.112         7.071           7.861         7.439 |
+  |          Digestive   condition         0.9224           7.125         6.873           7.868         7.631 |
+  |           Epilepsy   condition         0.1750           7.113         7.060           7.860         7.310 |
+  |             EyeEar   condition         0.4656           7.118         6.855           7.858         7.782 |
+  |   HeartCirculation   condition         0.9660           7.109         7.152           7.853         7.902 |
+  | LearningDifficulty   condition         0.9053           7.108         8.023           7.856         8.892 |
+  |      MentalIllness   condition         0.0000           7.353         5.789           7.921         6.973 |
+  | MetabolicCondition   condition         0.9030           7.109         7.155           7.854         7.883 |
+  |      MigraneNerves   condition         0.3787           7.139         6.604           7.866         7.500 |
+  |               Skin   condition         0.1652           7.113         7.005           7.851         8.102 |
   |-----------------------------------------------------------------------------------------------------------|
-  |           Disabled     overall         0.0000           7.685         6.103           8.033         7.461 |
-  |     FairPoorHealth     overall         0.0000           7.750         5.567           8.041         6.880 |
-  |              HasHC     overall         0.0000           7.685         6.102           8.032         7.462 |
+  |           Disabled     overall         0.0000           7.732         6.148           8.038         7.574 |
+  |     FairPoorHealth     overall         0.0000           7.760         5.648           8.048         7.024 |
+  |              HasHC     overall         0.0000           7.729         6.148           8.036         7.574 |
   +-----------------------------------------------------------------------------------------------------------+
+
+
 
 
 
