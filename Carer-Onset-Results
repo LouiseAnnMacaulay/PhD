@@ -1,0 +1,1358 @@
+
+This analysis grew arms and legs. Due to the scale and complexity of the results, I made the decision to post the raw outputs:
+. 
+. ********************************************************************************
+. * A. MAIN ONSET MODELS
+. ********************************************************************************
+. esttab ///
+>     CareOnset_Employed ///
+>     CareOnset_PEET ///
+>     CareEmploymentExit, ///
+>     eform ///
+>     b(4) ci(4) ///
+>     star(* 0.05 ** 0.01 *** 0.001) ///
+>     label ///
+>     mtitles( ///
+>         "Employment" ///
+>         "PEET" ///
+>         "Employment Exit" ///
+>     ) ///
+>     stats(N, fmt(0) labels("N")) ///
+>     compress
+
+----------------------------------------------------------------------------
+                              (1)                 (2)                 (3)   
+                       Employment                PEET     Employment Exit   
+----------------------------------------------------------------------------
+main                                                                        
+became_carer               0.8919              0.7653***           1.2442   
+                  [0.7712,1.0315]     [0.6623,0.8841]     [0.9569,1.6177]   
+
+Female                     0.5527***           0.5850***           1.4870***
+                  [0.4302,0.7101]     [0.4435,0.7716]     [1.1772,1.8784]   
+
+age                        1.4103***           1.0423              0.6744***
+                  [1.3301,1.4954]     [0.9796,1.1089]     [0.6325,0.7190]   
+
+Age squared                0.9960***           0.9993              1.0046***
+                  [0.9953,0.9967]     [0.9985,1.0001]     [1.0039,1.0054]   
+
+Higher educati~t           2.0130***           1.8331***           0.9412   
+                  [1.6030,2.5279]     [1.4367,2.3389]     [0.7398,1.1974]   
+
+Single                     0.7778              0.7190              1.1404   
+                  [0.5590,1.0823]     [0.5167,1.0003]     [0.8626,1.5077]   
+
+Separated/divo~d           0.9089              0.9422              0.9613   
+                  [0.6436,1.2835]     [0.6624,1.3401]     [0.6702,1.3788]   
+
+Other White et~y           0.6360              0.7163              1.0136   
+                  [0.3212,1.2594]     [0.3257,1.5751]     [0.6064,1.6941]   
+
+Other ethnicity            0.4713***           0.7212              1.3093   
+                  [0.3298,0.6735]     [0.4707,1.1051]     [0.9308,1.8418]   
+----------------------------------------------------------------------------
+N                           11867               11867               18302   
+----------------------------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. ********************************************************************************
+. * B. SIMPLE ONSET MARGINS
+. ********************************************************************************
+
+. display "B1. EMPLOYMENT: BEFORE VS CARE ONSET"
+B1. EMPLOYMENT: BEFORE VS CARE ONSET
+. 
+. est restore CareOnset_Employed
+(results CareOnset_Employed are active now)
+
+. margins, at(became_carer=(0 1))
+
+Predictive margins
+
+Number of strata = 1,386                          Number of obs   =     10,818
+Number of PSUs   = 2,517                          Population size = 9,600.9363
+                                                  Subpop. no. obs =      9,592
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,131
+
+Expression: Pr(Employed), predict()
+1._at: became_carer = 0
+2._at: became_carer = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |   .7723118    .010933    70.64   0.000     .7508605    .7937632
+          2  |    .755566   .0101265    74.61   0.000     .7356971    .7754349
+------------------------------------------------------------------------------
+
+. 
+. 
+. display " "
+
+
+. display "B2. PEET: BEFORE VS CARE ONSET"
+B2. PEET: BEFORE VS CARE ONSET
+
+. 
+. est restore CareOnset_PEET
+(results CareOnset_PEET are active now)
+
+. margins, at(became_carer=(0 1))
+
+Predictive margins
+
+Number of strata = 1,386                          Number of obs   =     10,818
+Number of PSUs   = 2,517                          Population size = 9,600.9363
+                                                  Subpop. no. obs =      9,592
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,131
+
+Expression: Pr(PEET), predict()
+1._at: became_carer = 0
+2._at: became_carer = 1
+
+------------------------------------------------------------------------------
+             |            Delta-method
+             |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         _at |
+          1  |    .845348   .0106969    79.03   0.000       .82436     .866336
+          2  |   .8082369   .0099567    81.18   0.000     .7887013    .8277725
+------------------------------------------------------------------------------
+
+. 
+. 
+. ********************************************************************************
+. * C. EVENT-TIME MODELS
+. ********************************************************************************
+. 
+
+. display "C. EVENT-TIME MODELS"
+C. EVENT-TIME MODELS
+
+. display "REFERENCE = ONE WAVE BEFORE CARE ONSET"
+REFERENCE = ONE WAVE BEFORE CARE ONSET
+
+. 
+. esttab ///
+>     CareEventStudy ///
+>     CareEventStudy_PEET, ///
+>     eform ///
+>     b(4) ci(4) ///
+>     star(* 0.05 ** 0.01 *** 0.001) ///
+>     label ///
+>     order( ///
+>         0.care_event_period ///
+>         1.care_event_period ///
+>         2.care_event_period ///
+>         3.care_event_period ///
+>         4.care_event_period ///
+>         5.care_event_period ///
+>     ) ///
+>     coeflabels( ///
+>         0.care_event_period "3 Waves Before" ///
+>         1.care_event_period "2 Waves Before" ///
+>         2.care_event_period "1 Wave Before (Reference)" ///
+>         3.care_event_period "Unpaid Care Onset" ///
+>         4.care_event_period "1 Wave After" ///
+>         5.care_event_period "2 Waves After" ///
+>     ) ///
+>     mtitles("Employment" "PEET") ///
+>     stats(N, fmt(0) labels("N")) ///
+>     compress
+
+--------------------------------------------------------
+                              (1)                 (2)   
+                       Employment                PEET   
+--------------------------------------------------------
+main                                                    
+3 Waves Before             1.1249              1.2216   
+                  [0.9226,1.3716]     [0.9768,1.5277]   
+
+2 Waves Before             1.0393              1.0074   
+                  [0.9079,1.1897]     [0.8642,1.1743]   
+
+1 Wave Before ~)           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+Unpaid Care On~t           0.9490              0.8362*  
+                  [0.8288,1.0868]     [0.7296,0.9583]   
+
+1 Wave After               0.9639              0.8339*  
+                  [0.8291,1.1206]     [0.7134,0.9748]   
+
+2 Waves After              0.9670              0.8397*  
+                  [0.8192,1.1414]     [0.7068,0.9975]   
+
+Female                     0.5823***           0.6048***
+                  [0.4852,0.6988]     [0.4980,0.7345]   
+
+age                        1.3696***           1.0651*  
+                  [1.3075,1.4348]     [1.0142,1.1185]   
+
+Age squared                0.9963***           0.9990***
+                  [0.9957,0.9969]     [0.9984,0.9996]   
+
+Higher educati~t           1.8376***           1.7313***
+                  [1.5358,2.1987]     [1.4289,2.0976]   
+
+Single                     0.8336              0.7760   
+                  [0.6437,1.0795]     [0.5931,1.0152]   
+
+Separated/divo~d           0.9443              0.9606   
+                  [0.7161,1.2452]     [0.7249,1.2728]   
+
+Other White et~y           0.7780              0.8814   
+                  [0.4715,1.2835]     [0.4976,1.5611]   
+
+Other ethnicity            0.5738***           0.8109   
+                  [0.4332,0.7600]     [0.5797,1.1342]   
+--------------------------------------------------------
+N                           18944               18944   
+--------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. ********************************************************************************
+. * D. EVENT-TIME MARGINS: EMPLOYMENT
+. ********************************************************************************
+. 
+. display "D1. EVENT-TIME MARGINS: EMPLOYMENT"
+D1. EVENT-TIME MARGINS: EMPLOYMENT
+
+. est restore CareEventStudy
+(results CareEventStudy are active now)
+
+. 
+. margins care_event_period
+
+Predictive margins
+
+Number of strata = 1,499                           Number of obs   =    17,295
+Number of PSUs   = 2,935                           Population size = 15,575.31
+                                                   Subpop. no. obs =    15,208
+                                                   Subpop. size    =         .
+Model VCE: Linearized                              Design df       =     1,436
+
+Expression: Pr(Employed), predict()
+
+------------------------------------------------------------------------------------
+                   |            Delta-method
+                   |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+-------------------+----------------------------------------------------------------
+ care_event_period |
+   3 waves before  |   .7814657   .0155838    50.15   0.000     .7508962    .8120352
+   2 waves before  |   .7695106   .0136484    56.38   0.000     .7427377    .7962836
+    1 wave before  |   .7635331   .0118432    64.47   0.000     .7403013    .7867649
+Unpaid care onset  |   .7552555   .0098957    76.32   0.000     .7358439     .774667
+     1 wave after  |   .7577288   .0091312    82.98   0.000     .7398168    .7756407
+    2 waves after  |   .7582398   .0096834    78.30   0.000     .7392447    .7772349
+------------------------------------------------------------------------------------
+
+. 
+. matrix CareEmploymentMargins = r(table)
+
+. 
+. matrix list CareEmploymentMargins
+
+CareEmploymentMargins[9,6]
+                   0.            1.            2.            3.            4.            5.
+        care_event~d  care_event~d  care_event~d  care_event~d  care_event~d  care_event~d
+     b     .78146573     .76951063     .76353313     .75525545     .75772875     .75823981
+    se     .01558383     .01364841     .01184319     .00989571     .00913122     .00968339
+     t     50.145935     56.380992     64.470227     76.321528      82.98219     78.303147
+pvalue     7.13e-318             0             0             0             0             0
+    ll     .75089622     .74273768     .74030133     .73584386     .73981679     .73924471
+    ul     .81203525     .79628358     .78676494     .77466704     .77564071     .77723492
+    df          1436          1436          1436          1436          1436          1436
+  crit     1.9616174     1.9616174     1.9616174     1.9616174     1.9616174     1.9616174
+ eform             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * E. EVENT-TIME MARGINS: PEET
+. ********************************************************************************
+
+
+. display "D2. EVENT-TIME MARGINS: PEET"
+D2. EVENT-TIME MARGINS: PEET
+
+. est restore CareEventStudy_PEET
+(results CareEventStudy_PEET are active now)
+
+. 
+. margins care_event_period
+
+Predictive margins
+
+Number of strata = 1,499                           Number of obs   =    17,295
+Number of PSUs   = 2,935                           Population size = 15,575.31
+                                                   Subpop. no. obs =    15,208
+                                                   Subpop. size    =         .
+Model VCE: Linearized                              Design df       =     1,436
+
+Expression: Pr(PEET), predict()
+
+------------------------------------------------------------------------------------
+                   |            Delta-method
+                   |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+-------------------+----------------------------------------------------------------
+ care_event_period |
+   3 waves before  |   .8574235   .0148896    57.59   0.000     .8282158    .8866312
+   2 waves before  |   .8328678   .0128956    64.59   0.000     .8075717     .858164
+    1 wave before  |   .8318655   .0110791    75.08   0.000     .8101326    .8535985
+Unpaid care onset  |   .8061151    .009586    84.09   0.000      .787311    .8249192
+     1 wave after  |   .8057116    .008768    91.89   0.000     .7885121    .8229111
+    2 waves after  |   .8067551   .0093031    86.72   0.000     .7885061    .8250041
+------------------------------------------------------------------------------------
+
+. 
+. matrix CarePEETMargins = r(table)
+
+. 
+. matrix list CarePEETMargins
+
+CarePEETMargins[9,6]
+                   0.            1.            2.            3.            4.            5.
+        care_event~d  care_event~d  care_event~d  care_event~d  care_event~d  care_event~d
+     b     .85742353     .83286784     .83186553     .80611508     .80571159      .8067551
+    se     .01488961     .01289556     .01107911     .00958601     .00876804     .00930306
+     t     57.585368     64.585652     75.084181      84.09285     91.891917     86.719342
+pvalue             0             0             0             0             0             0
+    ll     .82821582      .8075717     .81013257     .78731099     .78851206     .78850606
+    ul     .88663124     .85816398      .8535985     .82491917     .82291112     .82500414
+    df          1436          1436          1436          1436          1436          1436
+  crit     1.9616174     1.9616174     1.9616174     1.9616174     1.9616174     1.9616174
+ eform             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * F. ADJACENT EVENT-TIME TESTS
+. ********************************************************************************
+
+. display "E1. EMPLOYMENT EVENT-TIME TESTS"
+E1. EMPLOYMENT EVENT-TIME TESTS
+
+. 
+. est restore CareEventStudy
+(results CareEventStudy are active now)
+
+. 
+. display "ONSET VS 1 WAVE AFTER"
+ONSET VS 1 WAVE AFTER
+
+. lincom 3.care_event_period - 4.care_event_period
+
+ ( 1)  [Employed]3.care_event_period - [Employed]4.care_event_period = 0
+
+------------------------------------------------------------------------------
+    Employed | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |  -.0155047   .0544788    -0.28   0.776    -.1223714    .0913619
+------------------------------------------------------------------------------
+
+. 
+. display "1 WAVE AFTER VS 2 WAVES AFTER"
+1 WAVE AFTER VS 2 WAVES AFTER
+
+. lincom 4.care_event_period - 5.care_event_period
+
+ ( 1)  [Employed]4.care_event_period - [Employed]5.care_event_period = 0
+
+------------------------------------------------------------------------------
+    Employed | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |  -.0032167   .0535299    -0.06   0.952    -.1082218    .1017884
+------------------------------------------------------------------------------
+
+. 
+
+. display "E2. PEET EVENT-TIME TESTS"
+E2. PEET EVENT-TIME TESTS
+. 
+. est restore CareEventStudy_PEET
+(results CareEventStudy_PEET are active now)
+
+. 
+. display "ONSET VS 1 WAVE AFTER"
+ONSET VS 1 WAVE AFTER
+
+. lincom 3.care_event_period - 4.care_event_period
+
+ ( 1)  [PEET]3.care_event_period - [PEET]4.care_event_period = 0
+
+------------------------------------------------------------------------------
+        PEET | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   .0026577    .055093     0.05   0.962    -.1054136     .110729
+------------------------------------------------------------------------------
+
+. 
+. display "1 WAVE AFTER VS 2 WAVES AFTER"
+1 WAVE AFTER VS 2 WAVES AFTER
+
+. lincom 4.care_event_period - 5.care_event_period
+
+ ( 1)  [PEET]4.care_event_period - [PEET]5.care_event_period = 0
+
+------------------------------------------------------------------------------
+        PEET | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |  -.0068818   .0501858    -0.14   0.891    -.1053272    .0915636
+------------------------------------------------------------------------------
+
+. 
+. 
+. ********************************************************************************
+. * G. RANDOM- AND FIXED-EFFECTS EMPLOYMENT MODELS
+. ********************************************************************************
+. 
+
+. display "F. RANDOM- AND FIXED-EFFECTS EMPLOYMENT MODELS"
+F. RANDOM- AND FIXED-EFFECTS EMPLOYMENT MODEL
+
+. 
+. esttab ///
+>     CareOnset_RE ///
+>     CareOnset_FE, ///
+>     eform ///
+>     b(4) ci(4) ///
+>     star(* 0.05 ** 0.01 *** 0.001) ///
+>     label ///
+>     mtitles("Random Effects" "Fixed Effects") ///
+>     stats(N, fmt(0) labels("N")) ///
+>     compress
+
+--------------------------------------------------------
+                              (1)                 (2)   
+                   Random Effects       Fixed Effects   
+--------------------------------------------------------
+Currently empl~d                                        
+became_carer               0.9379              1.0347   
+                  [0.8165,1.0775]     [0.8616,1.2424]   
+
+Female                     0.2648***                    
+                  [0.1990,0.3524]                       
+
+age                        2.9465***           2.5239***
+                  [2.7491,3.1582]     [2.1847,2.9158]   
+
+Age squared                0.9875***           0.9883***
+                  [0.9866,0.9883]     [0.9867,0.9899]   
+
+Higher educati~t           9.7441***          12.1117***
+                 [7.4096,12.8141]    [5.3315,27.5145]   
+
+Single                     1.1086              1.7834*  
+                  [0.8214,1.4962]     [1.1081,2.8703]   
+
+Separated/divo~d           1.0514              1.2839   
+                  [0.7355,1.5030]     [0.7478,2.2046]   
+
+Other White et~y           0.2661***                    
+                  [0.1334,0.5308]                       
+
+Other ethnicity            0.1307***                    
+                  [0.0938,0.1822]                       
+--------------------------------------------------------
+/                                                       
+lnsig2u                   21.0685***                    
+                 [19.1735,23.1508]                       
+--------------------------------------------------------
+N                           19487                4220   
+--------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. ********************************************************************************
+. ********************************************************************************
+. * INTENSITY ANALYSES
+. ********************************************************************************
+. ********************************************************************************
+. 
+. 
+. ********************************************************************************
+. * H. INTENSITY INTERACTION MODELS
+. ********************************************************************************
+. 
+. display "G. CARE ONSET BY CARE INTENSITY"
+G. CARE ONSET BY CARE INTENSITY
+. 
+. esttab ///
+>     CI_E ///
+>     CI_P, ///
+>     eform ///
+>     b(4) ci(4) ///
+>     star(* 0.05 ** 0.01 *** 0.001) ///
+>     label ///
+>     mtitles("Employment" "PEET") ///
+>     stats(N, fmt(0) labels("N")) ///
+>     compress
+
+--------------------------------------------------------
+                              (1)                 (2)   
+                       Employment                PEET   
+--------------------------------------------------------
+main                                                    
+became_carer=0             1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=1             1.0071              0.8212*  
+                  [0.8496,1.1938]     [0.6931,0.9731]   
+
+<10 hours                  1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+10-19 hours                0.8934              0.8932   
+                  [0.4660,1.7131]     [0.4426,1.8025]   
+
+20-49 hours                0.6642              0.5607*  
+                  [0.3735,1.1810]     [0.3163,0.9940]   
+
+50+ hours                  0.3761**            0.3094***
+                  [0.2048,0.6904]     [0.1594,0.6005]   
+
+became_carer=0~s           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=0~s           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=0~s           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=0~s           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=1~s           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=1~s           0.7698              0.7590   
+                  [0.4146,1.4290]     [0.4255,1.3541]   
+
+became_carer=1~s           0.6444              0.7190   
+                  [0.3521,1.1795]     [0.4095,1.2624]   
+
+became_carer=1~s           0.4347**            0.5596*  
+                  [0.2588,0.7301]     [0.3412,0.9178]   
+
+Female                     0.6016***           0.6427** 
+                  [0.4640,0.7799]     [0.4833,0.8549]   
+
+age                        1.4337***           1.0463   
+                  [1.3495,1.5232]     [0.9804,1.1166]   
+
+Age squared                0.9958***           0.9992   
+                  [0.9950,0.9965]     [0.9984,1.0000]   
+
+Higher educati~t           1.8765***           1.6913***
+                  [1.4763,2.3852]     [1.3125,2.1794]   
+
+Single                     0.6863*             0.6184** 
+                  [0.4921,0.9572]     [0.4434,0.8626]   
+
+Separated/divo~d           0.8544              0.8742   
+                  [0.5906,1.2359]     [0.6006,1.2726]   
+
+Other White et~y           0.5307              0.6066   
+                  [0.2567,1.0973]     [0.2515,1.4630]   
+
+Other ethnicity            0.4615***           0.6842   
+                  [0.3083,0.6909]     [0.4318,1.0840]   
+--------------------------------------------------------
+N                           10644               10644   
+--------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. ********************************************************************************
+. * I. EMPLOYMENT MARGINS BY INTENSITY
+. ********************************************************************************
+
+. display "H1. EMPLOYMENT PREDICTED PROBABILITIES BY CARE INTENSITY"
+H1. EMPLOYMENT PREDICTED PROBABILITIES BY CARE INTENSITY
+
+. 
+. est restore CI_E
+(results CI_E are active now)
+
+. 
+. margins care_onset_intensity_person, ///
+>     at(became_carer=(0 1))
+
+Predictive margins
+
+Number of strata = 1,335                          Number of obs   =      9,894
+Number of PSUs   = 2,362                          Population size = 8,832.7424
+                                                  Subpop. no. obs =      8,819
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,027
+
+Expression: Pr(Employed), predict()
+1._at: became_carer = 0
+2._at: became_carer = 1
+
+-------------------------------------------------------------------------------------------------
+                                |            Delta-method
+                                |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+--------------------------------+----------------------------------------------------------------
+_at#care_onset_intensity_person |
+                   1#<10 hours  |    .782414   .0119905    65.25   0.000     .7588854    .8059426
+                 1#10-19 hours  |    .766535   .0469994    16.31   0.000     .6743093    .8587607
+                 1#20-49 hours  |   .7209905   .0459564    15.69   0.000     .6308115    .8111696
+                   1#50+ hours  |   .6193645   .0570591    10.85   0.000     .5073989    .7313302
+                   2#<10 hours  |   .7833894   .0107153    73.11   0.000     .7623631    .8044157
+                 2#10-19 hours  |   .7277657    .040903    17.79   0.000     .6475026    .8080288
+                 2#20-49 hours  |   .6453068   .0509236    12.67   0.000     .5453807    .7452329
+                   2#50+ hours  |   .4497098    .059423     7.57   0.000     .3331055    .5663142
+-------------------------------------------------------------------------------------------------
+
+. 
+. matrix CI_Employment_Margins = r(table)
+
+. 
+. matrix list CI_Employment_Margins
+
+CI_Employment_Margins[9,8]
+               1._at#        1._at#        1._at#        1._at#        2._at#        2._at#        2._at#        2._at#
+        1.c~y_person  2.c~y_person  3.c~y_person  4.c~y_person  1.c~y_person  2.c~y_person  3.c~y_person  4.c~y_person
+     b     .78241401     .76653498     .72099055     .61936452      .7833894     .72776574     .64530682     .44970982
+    se     .01199046     .04699935     .04595636     .05705906     .01071527     .04090305     .05092355       .059423
+     t     65.253049     16.309479     15.688593     10.854798     73.109607     17.792457      12.67207     7.5679424
+pvalue             0     2.363e-53     6.920e-50     4.621e-26             0     6.139e-62     2.689e-34     8.413e-14
+    ll     .75888541     .67430925     .63081147     .50739887     .76236307     .64750265     .54538073     .33310547
+    ul      .8059426     .85876072     .81116963     .73133016     .80441573     .80802884     .74523292     .56631418
+    df          1027          1027          1027          1027          1027          1027          1027          1027
+  crit     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766
+ eform             0             0             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * J. EMPLOYMENT CHANGE AT ONSET BY INTENSITY
+. ********************************************************************************
+
+. display "H2. EMPLOYMENT MARGINAL CHANGE AT ONSET BY CARE INTENSITY"
+H2. EMPLOYMENT MARGINAL CHANGE AT ONSET BY CARE INTENSITY
+
+. margins, ///
+>     dydx(became_carer) ///
+>     over(care_onset_intensity_person)
+
+Average marginal effects
+
+Number of strata = 1,335                          Number of obs   =      9,894
+Number of PSUs   = 2,362                          Population size = 8,832.7424
+                                                  Subpop. no. obs =      8,819
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,027
+
+Expression: Pr(Employed), predict()
+dy/dx wrt:  1.became_carer
+Over:       care_onset_intensity_person
+
+---------------------------------------------------------------------------------------------
+                            |            Delta-method
+                            |      dy/dx   std. err.      t    P>|t|     [95% conf. interval]
+----------------------------+----------------------------------------------------------------
+0.became_carer              |  (base outcome)
+----------------------------+----------------------------------------------------------------
+1.became_carer              |
+care_onset_intensity_person |
+                 <10 hours  |   .0009648   .0117656     0.08   0.935    -.0221227    .0240522
+               10-19 hours  |  -.0410031    .047909    -0.86   0.392    -.1350138    .0530075
+               20-49 hours  |  -.0771283   .0535689    -1.44   0.150    -.1822453    .0279887
+                 50+ hours  |  -.1708381   .0505708    -3.38   0.001     -.270072   -.0716042
+---------------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. matrix CI_Employment_AME = r(table)
+
+. 
+. matrix list CI_Employment_AME
+
+CI_Employment_AME[9,8]
+         0b.became~r:  0b.became~r:  0b.became~r:  0b.became~r:  1.became_~r:  1.became_~r:  1.became_~r:  1.became_~r:
+                  1o.           2o.           3o.           4o.            1.            2.            3.            4.
+        car~y_person  car~y_person  car~y_person  car~y_person  car~y_person  car~y_person  car~y_person  car~y_person
+     b             0             0             0             0     .00096476    -.04100314    -.07712829     -.1708381
+    se             .             .             .             .     .01176563     .04790897     .05356891     .05057079
+     t             .             .             .             .     .08199818    -.85585509    -1.4397958    -3.3781972
+pvalue             .             .             .             .     .93466414     .39227757     .15022993     .00075702
+    ll             .             .             .             .    -.02212267    -.13501379    -.18224531    -.27007198
+    ul             .             .             .             .     .02405219     .05300752     .02798873    -.07160423
+    df          1027          1027          1027          1027          1027          1027          1027          1027
+  crit     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766
+ eform             0             0             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * K. EMPLOYMENT JOINT INTERACTION TEST
+. ********************************************************************************
+. 
+
+. display "H3. EMPLOYMENT JOINT INTENSITY INTERACTION TEST"
+H3. EMPLOYMENT JOINT INTENSITY INTERACTION TEST
+
+. 
+. testparm ///
+>     1.became_carer#i.care_onset_intensity_person
+
+Adjusted Wald test
+
+ ( 1)  [Employed]1.became_carer#2.care_onset_intensity_person = 0
+ ( 2)  [Employed]1.became_carer#3.care_onset_intensity_person = 0
+ ( 3)  [Employed]1.became_carer#4.care_onset_intensity_person = 0
+
+       F(  3,  1025) =    3.89
+            Prob > F =    0.0088
+
+. 
+. 
+. ********************************************************************************
+. * L. PEET MARGINS BY INTENSITY
+. ********************************************************************************
+
+. display "I1. PEET PREDICTED PROBABILITIES BY CARE INTENSITY"
+I1. PEET PREDICTED PROBABILITIES BY CARE INTENSITY
+
+. 
+. est restore CI_P
+(results CI_P are active now)
+
+. 
+. margins care_onset_intensity_person, ///
+>     at(became_carer=(0 1))
+
+Predictive margins
+
+Number of strata = 1,335                          Number of obs   =      9,894
+Number of PSUs   = 2,362                          Population size = 8,832.7424
+                                                  Subpop. no. obs =      8,819
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,027
+
+Expression: Pr(PEET), predict()
+1._at: became_carer = 0
+2._at: became_carer = 1
+
+-------------------------------------------------------------------------------------------------
+                                |            Delta-method
+                                |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+--------------------------------+----------------------------------------------------------------
+_at#care_onset_intensity_person |
+                   1#<10 hours  |   .8610132   .0115285    74.69   0.000     .8383912    .8836352
+                 1#10-19 hours  |    .847293   .0441246    19.20   0.000     .7607084    .9338776
+                 1#20-49 hours  |   .7792971   .0462115    16.86   0.000     .6886173    .8699768
+                   1#50+ hours  |    .665841    .067106     9.92   0.000     .5341604    .7975215
+                   2#<10 hours  |   .8364105   .0102318    81.75   0.000     .8163329    .8564881
+                 2#10-19 hours  |   .7781179    .036366    21.40   0.000     .7067576    .8494781
+                 2#20-49 hours  |   .6801266   .0516491    13.17   0.000     .5787767    .7814765
+                   2#50+ hours  |   .4867241   .0659544     7.38   0.000     .3573033    .6161449
+-------------------------------------------------------------------------------------------------
+
+. 
+. matrix CI_PEET_Margins = r(table)
+
+. 
+. matrix list CI_PEET_Margins
+
+CI_PEET_Margins[9,8]
+               1._at#        1._at#        1._at#        1._at#        2._at#        2._at#        2._at#        2._at#
+        1.c~y_person  2.c~y_person  3.c~y_person  4.c~y_person  1.c~y_person  2.c~y_person  3.c~y_person  4.c~y_person
+     b     .86101319     .84729298     .77929706     .66584095      .8364105     .77811785     .68012656     .48672415
+    se     .01152846     .04412457     .04621149     .06710601      .0102318     .03636604     .05164915     .06595441
+     t     74.685902     19.202294     16.863709      9.922226     81.746182     21.396827     13.168205     7.3797054
+pvalue             0     1.863e-70     1.635e-56     3.207e-22             0     2.735e-84     1.049e-36     3.269e-13
+    ll     .83839117     .76070837     .68861735     .53416041     .81633288     .70675762     .57877665     .35730334
+    ul     .88363521     .93387759     .86997678     .79752149     .85648812     .84947808     .78147648     .61614495
+    df          1027          1027          1027          1027          1027          1027          1027          1027
+  crit     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766
+ eform             0             0             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * M. PEET CHANGE AT ONSET BY INTENSITY
+. ********************************************************************************
+. 
+
+. display "I2. PEET MARGINAL CHANGE AT ONSET BY CARE INTENSITY"
+I2. PEET MARGINAL CHANGE AT ONSET BY CARE INTENSITY
+. 
+. margins, ///
+>     dydx(became_carer) ///
+>     over(care_onset_intensity_person)
+
+Average marginal effects
+
+Number of strata = 1,335                          Number of obs   =      9,894
+Number of PSUs   = 2,362                          Population size = 8,832.7424
+                                                  Subpop. no. obs =      8,819
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,027
+
+Expression: Pr(PEET), predict()
+dy/dx wrt:  1.became_carer
+Over:       care_onset_intensity_person
+
+---------------------------------------------------------------------------------------------
+                            |            Delta-method
+                            |      dy/dx   std. err.      t    P>|t|     [95% conf. interval]
+----------------------------+----------------------------------------------------------------
+0.became_carer              |  (base outcome)
+----------------------------+----------------------------------------------------------------
+1.became_carer              |
+care_onset_intensity_person |
+                 <10 hours  |   -.024396   .0104371    -2.34   0.020    -.0448765   -.0039155
+               10-19 hours  |  -.0741911   .0396773    -1.87   0.062    -.1520489    .0036667
+               20-49 hours  |  -.1014452   .0529684    -1.92   0.056     -.205384    .0024935
+                 50+ hours  |  -.1763367   .0516845    -3.41   0.001     -.277756   -.0749173
+---------------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. matrix CI_PEET_AME = r(table)
+
+. 
+. matrix list CI_PEET_AME
+
+CI_PEET_AME[9,8]
+         0b.became~r:  0b.became~r:  0b.became~r:  0b.became~r:  1.became_~r:  1.became_~r:  1.became_~r:  1.became_~r:
+                  1o.           2o.           3o.           4o.            1.            2.            3.            4.
+        car~y_person  car~y_person  car~y_person  car~y_person  car~y_person  car~y_person  car~y_person  car~y_person
+     b             0             0             0             0    -.02439601    -.07419112    -.10144525    -.17633666
+    se             .             .             .             .     .01043712     .03967727     .05296843     .05168452
+     t             .             .             .             .    -2.3374284    -1.8698643    -1.9152021    -3.4117887
+pvalue             .             .             .             .     .01960826       .061787     .05574425     .00067053
+    ll             .             .             .             .    -.04487652     -.1520489    -.20538396    -.27775599
+    ul             .             .             .             .     -.0039155     .00366667     .00249346    -.07491734
+    df          1027          1027          1027          1027          1027          1027          1027          1027
+  crit     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766     1.9622766
+ eform             0             0             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * N. PEET JOINT INTERACTION TEST
+. ********************************************************************************
+. 
+
+. display "I3. PEET JOINT INTENSITY INTERACTION TEST"
+I3. PEET JOINT INTENSITY INTERACTION TEST
+
+
+. 
+. testparm ///
+>     1.became_carer#i.care_onset_intensity_person
+
+Adjusted Wald test
+
+ ( 1)  [PEET]1.became_carer#2.care_onset_intensity_person = 0
+ ( 2)  [PEET]1.became_carer#3.care_onset_intensity_person = 0
+ ( 3)  [PEET]1.became_carer#4.care_onset_intensity_person = 0
+
+       F(  3,  1025) =    2.18
+            Prob > F =    0.0887
+
+. 
+. 
+. ********************************************************************************
+. ********************************************************************************
+. * LOCATION ANALYSES
+. ********************************************************************************
+. ********************************************************************************
+. 
+. 
+. ********************************************************************************
+. * O. LOCATION INTERACTION MODELS
+. ********************************************************************************
+. 
+
+. display "J. CARE ONSET BY CARE LOCATION"
+J. CARE ONSET BY CARE LOCATION
+
+
+. 
+. esttab ///
+>     CL_E ///
+>     CL_P, ///
+>     eform ///
+>     b(4) ci(4) ///
+>     star(* 0.05 ** 0.01 *** 0.001) ///
+>     label ///
+>     mtitles("Employment" "PEET") ///
+>     stats(N, fmt(0) labels("N")) ///
+>     compress
+
+--------------------------------------------------------
+                              (1)                 (2)   
+                       Employment                PEET   
+--------------------------------------------------------
+main                                                    
+became_carer=0             1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=1             0.9704              0.8168*  
+                  [0.8115,1.1604]     [0.6794,0.9821]   
+
+Non-resident o~y           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+Household only             0.5777***           0.5466** 
+                  [0.4185,0.7975]     [0.3765,0.7936]   
+
+Both locations             0.4891*             0.5378   
+                  [0.2406,0.9943]     [0.2687,1.0765]   
+
+became_carer=0~n           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=0~y           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=0~s           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=1~n           1.0000              1.0000   
+                  [1.0000,1.0000]     [1.0000,1.0000]   
+
+became_carer=1~y           0.7368              0.7969   
+                  [0.5381,1.0089]     [0.5833,1.0887]   
+
+became_carer=1~s           1.0796              0.9511   
+                  [0.3772,3.0899]     [0.3682,2.4570]   
+
+Female                     0.5169***           0.5444***
+                  [0.4022,0.6645]     [0.4114,0.7202]   
+
+age                        1.3969***           1.0242   
+                  [1.3166,1.4821]     [0.9606,1.0919]   
+
+Age squared                0.9961***           0.9994   
+                  [0.9953,0.9968]     [0.9986,1.0002]   
+
+Higher educati~t           1.9759***           1.8082***
+                  [1.5775,2.4748]     [1.4185,2.3049]   
+
+Single                     0.7712              0.7102*  
+                  [0.5585,1.0648]     [0.5129,0.9833]   
+
+Separated/divo~d           0.9244              0.9605   
+                  [0.6468,1.3212]     [0.6671,1.3828]   
+
+Other White et~y           0.6755              0.7534   
+                  [0.3533,1.2917]     [0.3466,1.6377]   
+
+Other ethnicity            0.5239***           0.8034   
+                  [0.3688,0.7441]     [0.5177,1.2466]   
+--------------------------------------------------------
+N                           11867               11867   
+--------------------------------------------------------
+Exponentiated coefficients; 95% confidence intervals in brackets
+* p<0.05, ** p<0.01, *** p<0.001
+
+. 
+. 
+. ********************************************************************************
+. * P. EMPLOYMENT MARGINS BY LOCATION
+. ********************************************************************************
+. 
+
+. display "K1. EMPLOYMENT PREDICTED PROBABILITIES BY CARE LOCATION"
+K1. EMPLOYMENT PREDICTED PROBABILITIES BY CARE LOCATION
+
+
+. 
+. est restore CL_E
+(results CL_E are active now)
+
+. 
+. margins care_onset_location_person, ///
+>     at(became_carer=(0 1))
+
+Predictive margins
+
+Number of strata = 1,386                          Number of obs   =     10,818
+Number of PSUs   = 2,517                          Population size = 9,600.9363
+                                                  Subpop. no. obs =      9,592
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,131
+
+Expression: Pr(Employed), predict()
+1._at: became_carer = 0
+2._at: became_carer = 1
+
+------------------------------------------------------------------------------------------------
+                               |            Delta-method
+                               |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+-------------------------------+----------------------------------------------------------------
+_at#care_onset_location_person |
+          1#Non-resident only  |   .7984442   .0125718    63.51   0.000     .7737776    .8231109
+             1#Household only  |   .7157241   .0230134    31.10   0.000     .6705704    .7608778
+             1#Both locations  |   .6869269   .0617005    11.13   0.000     .5658665    .8079872
+          2#Non-resident only  |   .7944069   .0107347    74.00   0.000     .7733447    .8154692
+             2#Household only  |   .6561016   .0231231    28.37   0.000     .6107326    .7014706
+             2#Both locations  |   .6951424   .0801911     8.67   0.000     .5378024    .8524823
+------------------------------------------------------------------------------------------------
+
+. 
+. matrix CL_Employment_Margins = r(table)
+
+. 
+. matrix list CL_Employment_Margins
+
+CL_Employment_Margins[9,6]
+               1._at#        1._at#        1._at#        2._at#        2._at#        2._at#
+        1.c~n_person  2.c~n_person  3.c~n_person  1.c~n_person  2.c~n_person  3.c~n_person
+     b     .79844425     .71572408     .68692686     .79440693      .6561016     .69514236
+    se     .01257181     .02301338     .06170051     .01073475     .02312312     .08019106
+     t      63.51068     31.100347     11.133244     74.003303     28.374265     8.6685771
+pvalue             0     5.86e-154     2.160e-27             0     3.47e-134     1.493e-17
+    ll     .77377755     .67057037     .56586653     .77334467     .61073256      .5378024
+    ul     .82311094      .7608778     .80798719      .8154692     .70147064     .85248232
+    df          1131          1131          1131          1131          1131          1131
+  crit     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637
+ eform             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * Q. EMPLOYMENT CHANGE AT ONSET BY LOCATION
+. ********************************************************************************
+. 
+
+. display "K2. EMPLOYMENT MARGINAL CHANGE AT ONSET BY CARE LOCATION"
+K2. EMPLOYMENT MARGINAL CHANGE AT ONSET BY CARE LOCATION
+
+
+. 
+. margins, ///
+>     dydx(became_carer) ///
+>     over(care_onset_location_person)
+
+Average marginal effects
+
+Number of strata = 1,386                          Number of obs   =     10,818
+Number of PSUs   = 2,517                          Population size = 9,600.9363
+                                                  Subpop. no. obs =      9,592
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,131
+
+Expression: Pr(Employed), predict()
+dy/dx wrt:  1.became_carer
+Over:       care_onset_location_person
+
+--------------------------------------------------------------------------------------------
+                           |            Delta-method
+                           |      dy/dx   std. err.      t    P>|t|     [95% conf. interval]
+---------------------------+----------------------------------------------------------------
+0.became_carer             |  (base outcome)
+---------------------------+----------------------------------------------------------------
+1.became_carer             |
+care_onset_location_person |
+        Non-resident only  |  -.0039155   .0118426    -0.33   0.741    -.0271515    .0193204
+           Household only  |  -.0593193   .0232119    -2.56   0.011    -.1048624   -.0137761
+           Both locations  |    .008006   .0906693     0.09   0.930     -.169893     .185905
+--------------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. matrix CL_Employment_AME = r(table)
+
+. 
+. matrix list CL_Employment_AME
+
+CL_Employment_AME[9,6]
+         0b.became~r:  0b.became~r:  0b.became~r:  1.became_~r:  1.became_~r:  1.became_~r:
+                  1o.           2o.           3o.            1.            2.            3.
+        car~n_person  car~n_person  car~n_person  car~n_person  car~n_person  car~n_person
+     b             0             0             0    -.00391553    -.05931925     .00800603
+    se             .             .             .     .01184259     .02321185     .09066933
+     t             .             .             .    -.33063145     -2.555559     .08829922
+pvalue             .             .             .     .74098413     .01073165     .92965449
+    ll             .             .             .    -.02715146    -.10486238    -.16989296
+    ul             .             .             .     .01932039    -.01377612     .18590502
+    df          1131          1131          1131          1131          1131          1131
+  crit     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637
+ eform             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * R. EMPLOYMENT JOINT LOCATION INTERACTION TEST
+. ********************************************************************************
+. 
+
+. display "K3. EMPLOYMENT JOINT LOCATION INTERACTION TEST"
+K3. EMPLOYMENT JOINT LOCATION INTERACTION TEST
+. 
+. testparm ///
+>     1.became_carer#i.care_onset_location_person
+
+Adjusted Wald test
+
+ ( 1)  [Employed]1.became_carer#2.care_onset_location_person = 0
+ ( 2)  [Employed]1.became_carer#3.care_onset_location_person = 0
+
+       F(  2,  1130) =    1.87
+            Prob > F =    0.1542
+
+. 
+. 
+. ********************************************************************************
+. * S. PEET MARGINS BY LOCATION
+. ********************************************************************************
+. 
+
+. display "L1. PEET PREDICTED PROBABILITIES BY CARE LOCATION"
+L1. PEET PREDICTED PROBABILITIES BY CARE LOCATION
+
+
+. 
+. est restore CL_P
+(results CL_P are active now)
+
+. 
+. margins care_onset_location_person, ///
+>     at(became_carer=(0 1))
+
+Predictive margins
+
+Number of strata = 1,386                          Number of obs   =     10,818
+Number of PSUs   = 2,517                          Population size = 9,600.9363
+                                                  Subpop. no. obs =      9,592
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,131
+
+Expression: Pr(PEET), predict()
+1._at: became_carer = 0
+2._at: became_carer = 1
+
+------------------------------------------------------------------------------------------------
+                               |            Delta-method
+                               |     Margin   std. err.      t    P>|t|     [95% conf. interval]
+-------------------------------+----------------------------------------------------------------
+_at#care_onset_location_person |
+          1#Non-resident only  |   .8688312   .0117711    73.81   0.000     .8457355    .8919269
+             1#Household only  |   .7866222   .0247958    31.72   0.000     .7379713    .8352731
+             1#Both locations  |   .7839828   .0543528    14.42   0.000     .6773392    .8906265
+          2#Non-resident only  |   .8447068   .0099795    84.64   0.000     .8251264    .8642872
+             2#Household only  |   .7093317   .0241829    29.33   0.000     .6618832    .7567801
+             2#Both locations  |   .7400392   .0790555     9.36   0.000     .5849272    .8951512
+------------------------------------------------------------------------------------------------
+
+. 
+. matrix CL_PEET_Margins = r(table)
+
+. 
+. matrix list CL_PEET_Margins
+
+CL_PEET_Margins[9,6]
+               1._at#        1._at#        1._at#        2._at#        2._at#        2._at#
+        1.c~n_person  2.c~n_person  3.c~n_person  1.c~n_person  2.c~n_person  3.c~n_person
+     b     .86883116      .7866222     .78398283     .84470679     .70933167      .7400392
+    se     .01177113     .02479576     .05435281     .00997951     .02418292     .07905552
+     t     73.810366     31.724062     14.423962      84.64413     29.331932      9.361006
+pvalue             0     1.66e-158     2.027e-43             0     4.17e-141     4.119e-20
+    ll     .84573546     .73797134     .67733915     .82512636     .66188325     .58492723
+    ul     .89192686     .83527306      .8906265     .86428722     .75678009     .89515117
+    df          1131          1131          1131          1131          1131          1131
+  crit     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637
+ eform             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * T. PEET CHANGE AT ONSET BY LOCATION
+. ********************************************************************************
+. 
+
+. display "L2. PEET MARGINAL CHANGE AT ONSET BY CARE LOCATION"
+L2. PEET MARGINAL CHANGE AT ONSET BY CARE LOCATION
+
+
+. 
+. margins, ///
+>     dydx(became_carer) ///
+>     over(care_onset_location_person)
+
+Average marginal effects
+
+Number of strata = 1,386                          Number of obs   =     10,818
+Number of PSUs   = 2,517                          Population size = 9,600.9363
+                                                  Subpop. no. obs =      9,592
+                                                  Subpop. size    =          .
+Model VCE: Linearized                             Design df       =      1,131
+
+Expression: Pr(PEET), predict()
+dy/dx wrt:  1.became_carer
+Over:       care_onset_location_person
+
+--------------------------------------------------------------------------------------------
+                           |            Delta-method
+                           |      dy/dx   std. err.      t    P>|t|     [95% conf. interval]
+---------------------------+----------------------------------------------------------------
+0.became_carer             |  (base outcome)
+---------------------------+----------------------------------------------------------------
+1.became_carer             |
+care_onset_location_person |
+        Non-resident only  |  -.0244321   .0110048    -2.22   0.027    -.0460242   -.0028399
+           Household only  |  -.0751405    .021588    -3.48   0.001    -.1174975   -.0327835
+           Both locations  |   -.044567   .0853722    -0.52   0.602    -.2120727    .1229388
+--------------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. matrix CL_PEET_AME = r(table)
+
+. 
+. matrix list CL_PEET_AME
+
+CL_PEET_AME[9,6]
+         0b.became~r:  0b.became~r:  0b.became~r:  1.became_~r:  1.became_~r:  1.became_~r:
+                  1o.           2o.           3o.            1.            2.            3.
+        car~n_person  car~n_person  car~n_person  car~n_person  car~n_person  car~n_person
+     b             0             0             0    -.02443208     -.0751405    -.04456698
+    se             .             .             .     .01100482     .02158798     .08537224
+     t             .             .             .    -2.2201265    -3.4806633    -.52203129
+pvalue             .             .             .     .02660783     .00051924     .60175076
+    ll             .             .             .    -.04602423     -.1174975    -.21207274
+    ul             .             .             .    -.00283993     -.0327835     .12293879
+    df          1131          1131          1131          1131          1131          1131
+  crit     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637     1.9620637
+ eform             0             0             0             0             0             0
+
+. 
+. 
+. ********************************************************************************
+. * U. PEET JOINT LOCATION INTERACTION TEST
+. ********************************************************************************
+. 
+
+. display "L3. PEET JOINT LOCATION INTERACTION TEST"
+L3. PEET JOINT LOCATION INTERACTION TEST
+
+. 
+. testparm ///
+>     1.became_carer#i.care_onset_location_person
+
+Adjusted Wald test
+
+ ( 1)  [PEET]1.became_carer#2.care_onset_location_person = 0
+ ( 2)  [PEET]1.became_carer#3.care_onset_location_person = 0
+
+       F(  2,  1130) =    1.02
+            Prob > F =    0.3604
+
+. 
+. 
+. ********************************************************************************
+. * V. DESCRIPTIVE PROFILE OF FIRST OBSERVED CARING WAVE
+. ********************************************************************************
+. 
+. display "M. CHARACTERISTICS AT FIRST OBSERVED CARE ONSET"
+M. CHARACTERISTICS AT FIRST OBSERVED CARE ONSET
+
+. 
+. display "CARE HOURS AT FIRST OBSERVED ONSET"
+CARE HOURS AT FIRST OBSERVED ONSET
+
+. tab aidhrs if became_carer==1, missing
+
+           hours per week spent caring  |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                    -10 |          7        0.05        0.05
+                              -7. proxy |        478        3.19        3.24
+                            -2. refused |         11        0.07        3.31
+                         -1. don't know |         93        0.62        3.93
+                1. 0 - 4 hours per week |      6,527       43.58       47.51
+                2. 5 - 9 hours per week |      2,770       18.50       66.01
+              3. 10 - 19 hours per week |      1,609       10.74       76.75
+              4. 20 - 34 hours per week |        844        5.64       82.39
+              5. 35 - 49 hours per week |        472        3.15       85.54
+              6. 50 - 99 hours per week |        258        1.72       87.26
+7. 100 or more hours per week/continuou |        773        5.16       92.42
+               8. varies under 20 hours |        404        2.70       95.12
+             9. varies 20 hours or more |        559        3.73       98.85
+                              97. other |        172        1.15      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     14,977      100.00
+
+. 
+. display "HOUSEHOLD CARE AT FIRST OBSERVED ONSET"
+HOUSEHOLD CARE AT FIRST OBSERVED ONSET
+
+. tab HouseholdCarer if became_carer==1, missing
+
+   Provides |
+care within |
+  household |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      9,256       61.80       61.80
+          1 |      5,721       38.20      100.00
+------------+-----------------------------------
+      Total |     14,977      100.00
+
+. 
+. display "NON-RESIDENT CARE AT FIRST OBSERVED ONSET"
+NON-RESIDENT CARE AT FIRST OBSERVED ONSET
+
+. tab NonResidentCarer if became_carer==1, missing
+
+   Provides |
+       care |
+    outside |
+  household |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      5,073       33.87       33.87
+          1 |      9,904       66.13      100.00
+------------+-----------------------------------
+      Total |     14,977      100.00
+
+. 
+. display "MIXED CARE LOCATIONS AT FIRST OBSERVED ONSET"
+MIXED CARE LOCATIONS AT FIRST OBSERVED ONSET
+
+. tab MixedCareLocations if became_carer==1, missing
+
+   Provides |
+care within |
+and outside |
+  household |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     14,329       95.67       95.67
+          1 |        648        4.33      100.00
+------------+-----------------------------------
+      Total |     14,977      100.00
+
+. 
+. display "DISABILITY AT FIRST OBSERVED ONSET"
+DISABILITY AT FIRST OBSERVED ONSET
+
+. tab Disabled if became_carer==1, missing
+
+Longstanding illness or disability |      Freq.     Percent        Cum.
+-----------------------------------+-----------------------------------
+No longstanding illness/disability |      9,728       64.95       64.95
+   Longstanding illness/disability |      5,230       34.92       99.87
+                                 . |         19        0.13      100.00
+-----------------------------------+-----------------------------------
+                             Total |     14,977      100.00
