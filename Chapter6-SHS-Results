@@ -1,10 +1,11 @@
 
 UNPAID CARE AND PEET
-. 
-. est table PTCare1 PTHours1 PTYears1 PTLocation1 PTHelp1 PTDisC1, eform b(%8.4g) star stats(N ll bic r2)
+
+
+. est table PEETCare1 PEETHours1 PEETYears1 PEETLocation1 PEETHelp1 PEETDisC1, eform b(%8.4g) star stats(N ll bic r2)
 
 --------------------------------------------------------------------------------------------------
-    Variable |   PTCare1      PTHours1      PTYears1     PTLocation1     PTHelp1       PTDisC1    
+    Variable |  PEETCare1    PEETHours1    PEETYears1    PEETLocat~1    PEETHelp1     PEETDisC1   
 -------------+------------------------------------------------------------------------------------
          fem |    .9735         .9964         .9927         .9675         1.416**       .9732     
         Age2 |    .9993***      .9993***      .9993***      .9993***      .9996***      .9993***  
@@ -41,10 +42,10 @@ DisabledCa~r |                                                                  
                                                           Legend: * p<0.05; ** p<0.01; *** p<0.001
 
 . 
-. est table PTHours2 PTYears2 PTLocation2 PTHelp2 PTDisC2, eform b(%8.4g) star stats(N ll bic r2)
+. est table PEETHours2 PEETYears2 PEETLocation2 PEETHelp2 PEETDisC2, eform b(%8.4g) star stats(N ll bic r2)
 
 ------------------------------------------------------------------------------------
-    Variable |  PTHours2      PTYears2     PTLocation2     PTHelp2       PTDisC2    
+    Variable | PEETHours2    PEETYears2    PEETLocat~2    PEETHelp2     PEETDisC2   
 -------------+----------------------------------------------------------------------
          fem |    1.377**       1.296**        1.17          1.43**       1.427**   
         Age2 |    .9996***      .9996***      .9995***      .9996***      .9996***  
@@ -72,4 +73,108 @@ DisabledCa~r |                                                            .5439*
           r2 |                                                                      
 ------------------------------------------------------------------------------------
                                             Legend: * p<0.05; ** p<0.01; *** p<0.001
+
+
+
+
+
+INTERACTION EFFECTS OF CAREGIVING ON PEET - DEMOGRAPHICS
+
+
+
+. est table UCDI UCFI UCEI UCAI UCMI UCETHI, eform b(%8.4g) star stats(N ll bic r2)
+
+--------------------------------------------------------------------------------------------------------
+    Variable |     UCDI           UCFI           UCEI           UCAI           UCMI          UCETHI     
+-------------+------------------------------------------------------------------------------------------
+         fem |     1.036                         1.004          .9857          1.006          1.004     
+      AgeCat |     .9522***       .9437***       .9438***                       .944***       .9438***  
+HighEducat~n |     2.062***       2.166***                       2.28***       2.169***       2.169***  
+      OWhite |     1.729***       1.841***        1.84***       1.952***       1.838***                 
+AsianAndOt~r |     .7265*         .7774*         .7727*         .8091          .7778*                   
+      Single |     .2532***       .2308***       .2317***       .2295***                      .2313***  
+   Seperated |     .3618***       .3317***       .3326***        .312***                      .3322***  
+             |
+       Carer |
+          1  |     .5507***       .5525***       .7357***       .9553          .6858***       .6937***  
+             |
+    Disabled |
+          1  |     .3551***                                                                             
+             |
+       Carer#|
+    Disabled |
+        1 1  |     1.555***                                                                             
+             |
+         fem |
+          1  |                    .9678                                                                 
+             |
+   Carer#fem |
+        1 1  |                    1.464**                                                               
+             |
+HighEducat~n |
+          1  |                                   2.209***                                               
+             |
+       Carer#|
+HighEducat~n |
+        1 1  |                                   .8445                                                  
+             |
+      AgeCat |
+          0  |                                                (empty)                                   
+         26  |                                                  15.81***                                
+         36  |                                                  5.436***                                
+         46  |                                                  4.174***                                
+         56  |                                                  3.681***                                
+         66  |                                              (omitted)                                   
+             |
+Carer#AgeCat |
+       0  0  |                                                (empty)                                   
+             |
+Carer#AgeCat |
+       1  0  |                                                (empty)                                   
+       1 26  |                                                  .3405***                                
+       1 36  |                                                  .4208***                                
+       1 46  |                                                  .6042**                                 
+       1 56  |                                                  .8865                                   
+       1 66  |                                              (omitted)                                   
+             |
+      Single |
+          1  |                                                                 .2381***                 
+             |
+Carer#Single |
+        1 1  |                                                                 .7479                    
+             |
+   Seperated |
+          1  |                                                                  .313***                 
+             |
+       Carer#|
+   Seperated |
+        1 1  |                                                                 1.681**                  
+             |
+      OWhite |
+          1  |                                                                                1.908***  
+             |
+Carer#OWhite |
+        1 1  |                                                                                 .549     
+             |
+AsianAndOt~r |
+          1  |                                                                                .7707*    
+             |
+       Carer#|
+AsianAndOt~r |
+        1 1  |                                                                                1.083     
+             |
+       _cons |     110.9***         107***       104.2***       1.698***       103.3***       104.7***  
+-------------+------------------------------------------------------------------------------------------
+           N |     26312          26312          26312          26312          26312          26312     
+          ll |    -11057         -11461         -11466         -11282         -11455         -11466     
+         bic |     22226          23024          23033          22726          23023          23043     
+          r2 |                                                                                          
+--------------------------------------------------------------------------------------------------------
+                                                                Legend: * p<0.05; ** p<0.01; *** p<0.001
+
+. 
+.         
+. 
+end of do-file
+
 
