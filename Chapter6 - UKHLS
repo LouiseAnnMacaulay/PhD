@@ -1,0 +1,193 @@
+
+
+
+
+
+
+
+LIFE SATISFACTION AND PEET
+
+
+. list, sepby(CareCharacteristic) noobs clean
+
+    CareCharacteri~c          PEET            CareGroup   Margin      SE   LowerCI   UpperCI  
+         UnpaidCarer   Not in PEET   Characteristic = 0    4.786   0.018     4.751     4.820  
+         UnpaidCarer   Not in PEET   Characteristic = 1    4.687   0.028     4.631     4.742  
+         UnpaidCarer          PEET   Characteristic = 0    5.184   0.009     5.167     5.200  
+         UnpaidCarer          PEET   Characteristic = 1    5.043   0.017     5.010     5.076  
+      HouseholdCarer   Not in PEET   Characteristic = 0    4.800   0.017     4.766     4.833  
+      HouseholdCarer   Not in PEET   Characteristic = 1    4.447   0.041     4.367     4.527  
+      HouseholdCarer          PEET   Characteristic = 0    5.177   0.008     5.161     5.193  
+      HouseholdCarer          PEET   Characteristic = 1    4.900   0.028     4.845     4.956  
+    NonResidentCarer   Not in PEET   Characteristic = 0    4.771   0.017     4.738     4.805  
+    NonResidentCarer   Not in PEET   Characteristic = 1    4.836   0.034     4.769     4.904  
+    NonResidentCarer          PEET   Characteristic = 0    5.170   0.008     5.153     5.186  
+    NonResidentCarer          PEET   Characteristic = 1    5.086   0.019     5.048     5.123  
+               Care1   Not in PEET   Characteristic = 0    4.758   0.017     4.725     4.791  
+               Care1   Not in PEET   Characteristic = 1    4.810   0.039     4.734     4.886  
+               Care1          PEET   Characteristic = 0    5.168   0.008     5.152     5.185  
+               Care1          PEET   Characteristic = 1    5.092   0.021     5.049     5.134  
+               Care2   Not in PEET   Characteristic = 0    4.761   0.016     4.729     4.793  
+               Care2   Not in PEET   Characteristic = 1    4.800   0.068     4.667     4.934  
+               Care2          PEET   Characteristic = 0    5.165   0.008     5.149     5.181  
+               Care2          PEET   Characteristic = 1    5.035   0.038     4.960     5.109  
+            Care3or4   Not in PEET   Characteristic = 0    4.761   0.016     4.729     4.793  
+            Care3or4   Not in PEET   Characteristic = 1    4.896   0.123     4.655     5.138  
+            Care3or4          PEET   Characteristic = 0    5.163   0.008     5.147     5.179  
+            Care3or4          PEET   Characteristic = 1    5.036   0.077     4.885     5.186  
+             Under10   Not in PEET   Characteristic = 0    4.774   0.017     4.740     4.807  
+             Under10   Not in PEET   Characteristic = 1    4.821   0.038     4.746     4.896  
+             Under10          PEET   Characteristic = 0    5.167   0.008     5.151     5.184  
+             Under10          PEET   Characteristic = 1    5.082   0.019     5.044     5.120  
+             Under19   Not in PEET   Characteristic = 0    4.781   0.017     4.749     4.814  
+             Under19   Not in PEET   Characteristic = 1    4.651   0.062     4.529     4.773  
+             Under19          PEET   Characteristic = 0    5.163   0.008     5.147     5.179  
+             Under19          PEET   Characteristic = 1    4.999   0.037     4.926     5.071  
+              Over20   Not in PEET   Characteristic = 0    4.783   0.017     4.751     4.816  
+              Over20   Not in PEET   Characteristic = 1    4.540   0.054     4.434     4.646  
+              Over20          PEET   Characteristic = 0    5.167   0.008     5.151     5.183  
+              Over20          PEET   Characteristic = 1    4.804   0.045     4.717     4.891  
+              Over50   Not in PEET   Characteristic = 0    4.783   0.017     4.751     4.816  
+              Over50   Not in PEET   Characteristic = 1    4.417   0.062     4.295     4.539  
+              Over50          PEET   Characteristic = 0    5.165   0.008     5.149     5.181  
+              Over50          PEET   Characteristic = 1    4.745   0.065     4.618     4.871  
+            NoDCarer   Not in PEET   Characteristic = 0    4.759   0.017     4.725     4.793  
+            NoDCarer   Not in PEET   Characteristic = 1    4.953   0.039     4.876     5.030  
+            NoDCarer          PEET   Characteristic = 0    5.166   0.008     5.150     5.182  
+            NoDCarer          PEET   Characteristic = 1    5.105   0.020     5.066     5.144  
+       DisabledCarer   Not in PEET   Characteristic = 0    4.800   0.017     4.767     4.833  
+       DisabledCarer   Not in PEET   Characteristic = 1    4.443   0.037     4.370     4.516  
+       DisabledCarer          PEET   Characteristic = 0    5.179   0.008     5.163     5.195  
+       DisabledCarer          PEET   Characteristic = 1    4.874   0.027     4.821     4.927  
+
+. 
+. restore
+
+. 
+. 
+. *******************************************************************************
+. * 15. DISPLAY FULL MODELS IN STATA
+. *******************************************************************************
+. 
+. est table `models', ///
+>     b(%8.3f) ///
+>     star ///
+>     stats(N N_g)
+
+------------------------------------------------------------------------------------
+    Variable | UKHLS_PEE~r   UKHLS_PEE~n   UKHLS_PEE~r   UKHLS_PEE~s   UKHLS_PEE~y  
+-------------+----------------------------------------------------------------------
+         Fem |    0.023         0.021         0.019         0.026         0.024     
+       dvage |   -0.071***     -0.070***     -0.071***     -0.069***     -0.070***  
+        Age2 |    0.001***      0.001***      0.001***      0.001***      0.001***  
+HighEducat~n |    0.146***      0.142***      0.149***      0.142***      0.145***  
+       White |    0.013         0.014         0.017         0.013         0.010     
+AfricanCar~n |   -0.197***     -0.195***     -0.196***     -0.195***     -0.201***  
+       Asian |   -0.208***     -0.202***     -0.208***     -0.207***     -0.215***  
+      Indian |   -0.126***     -0.121***     -0.126***     -0.127***     -0.132***  
+        Arab |   -0.294*       -0.292*       -0.297*       -0.288*       -0.306*    
+       Mixed |   -0.342***     -0.336***     -0.343***     -0.339***     -0.346***  
+       Other |   -0.243        -0.242        -0.238        -0.246*       -0.241     
+      Single |   -0.371***     -0.371***     -0.371***     -0.371***     -0.370***  
+   Seperated |   -0.432***     -0.434***     -0.431***     -0.429***     -0.427***  
+             |
+        PEET |
+1. Partic..  |    0.398***      0.394***      0.416***      0.398***      0.404***  
+             |
+ UnpaidCarer |
+          1  |   -0.099**                                                           
+             |
+        PEET#|
+ UnpaidCarer |
+1. Partic.. #|
+          1  |   -0.042                                                             
+             |
+HouseholdC~r |
+          1  |                 -0.353***                                            
+             |
+        PEET#|
+HouseholdC~r |
+1. Partic.. #|
+          1  |                  0.076                                               
+             |
+NonResiden~r |
+          1  |                  0.065                                               
+             |
+        PEET#|
+NonResiden~r |
+1. Partic.. #|
+          1  |                 -0.149***                                            
+             |
+       Care1 |
+          1  |                                0.052                                 
+             |
+  PEET#Care1 |
+1. Partic.. #|
+          1  |                               -0.129**                               
+             |
+       Care2 |
+          1  |                                0.039                                 
+             |
+  PEET#Care2 |
+1. Partic.. #|
+          1  |                               -0.170*                                
+             |
+    Care3or4 |
+          1  |                                0.135                                 
+             |
+        PEET#|
+    Care3or4 |
+1. Partic.. #|
+          1  |                               -0.262                                 
+             |
+     Under10 |
+          1  |                                              0.047                   
+             |
+PEET#Under10 |
+1. Partic.. #|
+          1  |                                             -0.132**                 
+             |
+     Under19 |
+          1  |                                             -0.130*                  
+             |
+PEET#Under19 |
+1. Partic.. #|
+          1  |                                             -0.034                   
+             |
+      Over20 |
+          1  |                                             -0.243***                
+             |
+ PEET#Over20 |
+1. Partic.. #|
+          1  |                                             -0.119                   
+             |
+      Over50 |
+          1  |                                             -0.366***                
+             |
+ PEET#Over50 |
+1. Partic.. #|
+          1  |                                             -0.054                   
+             |
+DisabledCa~r |
+          1  |                                                           -0.357***  
+             |
+        PEET#|
+DisabledCa~r |
+1. Partic.. #|
+          1  |                                                            0.052     
+             |
+    NoDCarer |
+          1  |                                                            0.194***  
+             |
+        PEET#|
+    NoDCarer |
+1. Partic.. #|
+          1  |                                                           -0.255***  
+             |
+       _cons |    6.304***      6.304***      6.288***      6.282***      6.288***  
+-------------+----------------------------------------------------------------------
+           N |    67357         67357         67357         67357         67357     
+         N_g |  2.3e+04       2.3e+04       2.3e+04       2.3e+04       2.3e+04     
+------------------------------------------------------------------------------------
+                                            Legend: * p<0.05; ** p<0.01; *** p<0.001
+
